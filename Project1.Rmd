@@ -24,40 +24,42 @@ library(grplasso)
 
 # The Data Set 
 
-For our project work we use the Munich Rent 2003 data set.
+For our project work we use the Munich Rent 2003 data set as described in https://rdrr.io/cran/LinRegInteractive/man/munichrent03.html.
 
 The data set has the covariates
 -   `nmqm`: rent per square meter (numeric)
--   `wfl`: square meters (int)
--   `rooms`: number of rooms (int)
--   `bj`: year of construction (int)
--   `bez`: number of previous tenants (int)
--   `wohngut`: ? (0-1)
--   `wohnbest`: ? (0-1)
--   `ww0`: ? (0-1)
--   `zh0`: ? (0-1)
--   `badkach0`: ? (0-1)
--   `badextra`: additional bathroom (0-1)
--   `kueche`: kitchen included (0-1)
+-   `wfl`: area in square meters (numeric)
+-   `rooms`: number of rooms (numeric)
+-   `bj`: year of construction (factor)
+-   `bez`: district (factor)
+-   `wohngut`: quality of location (factor)
+-   `wohnbest`: high quality of location (factor)
+-   `ww0`: hot water supply available (factor)
+-   `zh0`: central heating (factor)
+-   `badkach0`: tiled bathroom (factor)
+-   `badextra`: high-quality bathroom (factor)
+-   `kueche`: upscale kitchen equipment (factor)
 and the response
 -   `nm`: rental price (numeric).
 
 ```{r loadData,eval=TRUE,echo=FALSE}
-#Load data set
+# Load data set
 munich_house <- read.table(
   "https://data.ub.uni-muenchen.de/2/1/miete03.asc",
   sep="\t", header=TRUE)
 
-munich_house$bez=as.factor(munich_house$bez) #FB: what does this do technically?
+# Transform bez and bj to factor since interpreted as numeric by read.table
+munich_house$bez=as.factor(munich_house$bez) 
 munich_house$bj=as.factor(munich_house$bj)
 str(munich_house)
 ```
 
-We store the data set in an R data frame. 
+We store the data set in an R data frame for all further computations. 
 
 ```{r buildDataFrame,eval=TRUE,echo=FALSE} 
-#create model matrix without intercept and nmqm
-x_mod <- model.matrix(nm~.-nmqm,data=munich_house)[,-1]
+# Create model matrix without intercept and nmqm 
+# (since nmqm*wfl=nm gives the response directly)
+x_mod <- model.matrix(nm~.-nmqm,data=munich_house)[,-1] 
 y_mod <- munich_house$nm
 df_mod <- data.frame(y_mod,x_mod)
 colnames(df_mod)[1]="nm"
@@ -75,15 +77,20 @@ lm_mod <- lm(nm~.,data=df_mod)
 summary(lm_mod)
 ```
 
+Remark: Interestingly in the regression, the significance of different `bj`s and `bez`s varies a lot.  
+
+
 
 # Shrinkage
+
+After we saw the results for the linear regression, we continue with shrinkage methods.
 
 ## Lasso
 
 ```{r lasso, eval=TRUE, echo=FALSE}
 gen_mod <- glmnet(x=x_mod,y=y_mod,alpha=1,standardize=TRUE)
 gen_lambda_mod <- gen_mod$lambda
-plot(gen_lambda_mod) #FB: What is this?
+plot(gen_lambda_mod) 
 
 plot(gen_mod) #plot against the L1 norm
 plot(gen_mod,xvar="lambda",label=TRUE)
@@ -94,8 +101,12 @@ colnames(results_mod)=c("general lasso","vanilla LS")
 print(results_mod)
 ```
 
+For the $\lambda$ with one standard deviation, we observe that many of the `bj`s and `bez`s get shrinked, but not all of them - and the values differ from the linear regression. Whereas the other kept covariants roughly keep their parameter.
+
+Above we considered a fixed $\lambda$, now we analyse which $\lambda$ is optimal using cross validation.
+
 ```{r lassoCV, eval=TRUE, echo=FALSE}
-#Choosing optimal lambda performing Crossvalidation
+# Choosing optimal lambda performing Crossvalidation
 cv_gen_mod=cv.glmnet(x=x_mod,y=y_mod,alpha=1)
 print(paste("The lamda giving the smallest CV error",cv_gen_mod$lambda.min))
 print(paste("The 1sd err method lambda",cv_gen_mod$lambda.1se))
@@ -103,29 +114,73 @@ plot(cv_gen_mod)
 ```
 
 
+## Group lasso
+
+```{r groupLasso, eval=TRUE, echo=FALSE}
+# Adding an intercept to the design matrix 
+# NB! In contrast to glm_net the grplasso package requires the intercept
+x_mod_group <- cbind(1, x_mod)
+colnames(x_mod_group)[1] <- c("Intercept")
+# Building new data frame with intercept now for the group lasso
+df_mod_group <- data.frame(y_mod,x_mod_group)
+colnames(df_mod_group)[1] <-c("nm")
+
+# Defining the grouped classes
+district <- rep(4,24) #25 levels of factor bez, why 24? This must be changed according to the design matrix
+year <- rep(3,43) #44 levels of factor bj, has to be 43?
+index_mod <- c(NA,1,2,year,district,5,6,7,8,9,10,11) #individual groups for all except bez and bj
+
+grp_lambda_mod <- lambdamax(x=x_mod_group, y = y_mod, index = index_mod, penscale = sqrt,
+                          model = LinReg(),standardize = TRUE,center = TRUE)*0.5^(0:20)
+
+# Fit using grouped index
+# NB! Neglecting first 3 lambdas for better scale in the plot
+grp_mod <- grplasso(x=x_mod_group, y = y_mod, index = index_mod, lambda = grp_lambda_mod[-(1:3)], model = LinReg(),
+                    penscale = sqrt,
+                    control = grpl.control(update.hess = "lambda", trace = 0))
 
 
+## Plot coefficient paths
+plot(grp_mod) 
+str(grp_mod)
+coef(grp_mod) 
+
+```
 
 
-For some problems you will need to include some LaTex code. Please install latex on your computer and then consult Compulsory1.Rmd for hints how to write formulas in LaTex. 
-
-An example:
-  
-  $$Y_i  = f(x_i) + \varepsilon_i \ ,$$
-  
-  Or the same formula $Y_i  = f(x_i) + \varepsilon_i$ in-line.
+In the grouped lasso, the `bj` and `bez` are all shrinked or are all inclueded, respectively. This coincides better with our intuition, that this criterion is considered or not considered. Whereas in the regression and lasso before, just some years of construction and some areas where significant.
 
 
-# Problem 1
-
-## a)
-
-## b)
-
-## c)
+.............. STILL TO DO BY FB!!!!!
 
 
+```{r final, eval=TRUE, echo=FALSE}
+#CV for å finne optimal lambda? Bootstrapping? 
+library(gglasso)
+#package chosen lambdagrid
+fitls_mod <- gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls")
+plot(fitls_mod)
+#own defined lambdagrid
+fitls_mod <- gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=grp_lambda_mod)
+plot(fitls_mod)
 
-# Problem 2
+#crossvalidation on self defined lambdagrid - this takes some time
+cvfitls_mod <- cv.gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=grp_lambda_mod)
+plot(cvfitls_mod)
+str(cvfitls_mod)
+cvfitls_mod$lambda.1se
 
-## a) 
+#fit with optimal lambda on defined lambda grid(either package made or made by me)
+fin_mod=gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=cvfitls_mod$lambda.1se)
+coef(fin_mod)
+
+#testing with a fixed lambda
+test_mod=gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=5)
+coef(test_mod)
+
+#final results, group lasso either shrinks all or nothing and even increases some estimated parameter coefficients, what do we take away from this? 
+results_mod=cbind(coef(fin_mod),coef(gen_mod,s=cv_gen_mod$lambda.1se),coef(lm_mod))
+colnames(results_mod)=c("group lasso","general lasso","vanilla LS")
+print(results_mod)
+
+```
