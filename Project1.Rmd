@@ -1,0 +1,131 @@
+---
+subtitle: "MA8701"
+title: "Project 1"
+author: "Group 5 : Yellow Submarine"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  #html_document
+  pdf_document
+---
+  
+```{r setup, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE,tidy=TRUE,message=FALSE,warning=FALSE,strip.white=TRUE,prompt=FALSE,
+                      cache=TRUE, size="scriptsize",fig.width=4, fig.height=3)
+```
+
+```{r rpackages,eval=TRUE,echo=FALSE}
+#load packages
+library(GGally)
+library(tidyverse)
+library(glmnet)
+library(grplasso)
+```
+
+# The Data Set 
+
+For our project work we use the Munich Rent 2003 data set.
+
+The data set has the covariates
+-   `nmqm`: rent per square meter (numeric)
+-   `wfl`: square meters (int)
+-   `rooms`: number of rooms (int)
+-   `bj`: year of construction (int)
+-   `bez`: number of previous tenants (int)
+-   `wohngut`: ? (0-1)
+-   `wohnbest`: ? (0-1)
+-   `ww0`: ? (0-1)
+-   `zh0`: ? (0-1)
+-   `badkach0`: ? (0-1)
+-   `badextra`: additional bathroom (0-1)
+-   `kueche`: kitchen included (0-1)
+and the response
+-   `nm`: rental price (numeric).
+
+```{r loadData,eval=TRUE,echo=FALSE}
+#Load data set
+munich_house <- read.table(
+  "https://data.ub.uni-muenchen.de/2/1/miete03.asc",
+  sep="\t", header=TRUE)
+
+munich_house$bez=as.factor(munich_house$bez) #FB: what does this do technically?
+munich_house$bj=as.factor(munich_house$bj)
+str(munich_house)
+```
+
+We store the data set in an R data frame. 
+
+```{r buildDataFrame,eval=TRUE,echo=FALSE} 
+#create model matrix without intercept and nmqm
+x_mod <- model.matrix(nm~.-nmqm,data=munich_house)[,-1]
+y_mod <- munich_house$nm
+df_mod <- data.frame(y_mod,x_mod)
+colnames(df_mod)[1]="nm"
+```
+
+
+# Regression
+
+We start with a vanilla regression for reference.
+
+```{r regression, eval=TRUE, echo=FALSE}
+# Vanilla regression model
+lm_mod <- lm(nm~.,data=df_mod) 
+#Printing the summary to assess significant parameters
+summary(lm_mod)
+```
+
+
+# Shrinkage
+
+## Lasso
+
+```{r lasso, eval=TRUE, echo=FALSE}
+gen_mod <- glmnet(x=x_mod,y=y_mod,alpha=1,standardize=TRUE)
+gen_lambda_mod <- gen_mod$lambda
+plot(gen_lambda_mod) #FB: What is this?
+
+plot(gen_mod) #plot against the L1 norm
+plot(gen_mod,xvar="lambda",label=TRUE)
+abline(v=log(cv_gen_mod$lambda.1se)) #use 1sd error rule default
+
+results_mod=cbind(coef(gen_mod,s=cv_gen_mod$lambda.1se),coef(lm_mod))
+colnames(results_mod)=c("general lasso","vanilla LS")
+print(results_mod)
+```
+
+```{r lassoCV, eval=TRUE, echo=FALSE}
+#Choosing optimal lambda performing Crossvalidation
+cv_gen_mod=cv.glmnet(x=x_mod,y=y_mod,alpha=1)
+print(paste("The lamda giving the smallest CV error",cv_gen_mod$lambda.min))
+print(paste("The 1sd err method lambda",cv_gen_mod$lambda.1se))
+plot(cv_gen_mod)
+```
+
+
+
+
+
+
+For some problems you will need to include some LaTex code. Please install latex on your computer and then consult Compulsory1.Rmd for hints how to write formulas in LaTex. 
+
+An example:
+  
+  $$Y_i  = f(x_i) + \varepsilon_i \ ,$$
+  
+  Or the same formula $Y_i  = f(x_i) + \varepsilon_i$ in-line.
+
+
+# Problem 1
+
+## a)
+
+## b)
+
+## c)
+
+
+
+# Problem 2
+
+## a) 
