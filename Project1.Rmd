@@ -78,11 +78,21 @@ summary(lm_mod)
 
 Remark: Interestingly in the regression, the significance of different `bj`s and `bez`s varies a lot.  
 
-
-
 # Shrinkage
 
 After we saw the results for the linear regression, we continue with shrinkage methods.
+
+## Ridge
+```{r ridge, eval = TRUE, echo = TRUE}
+munich_house <- read.table(
+  "https://data.ub.uni-muenchen.de/2/1/miete03.asc",
+  sep="\t", header=TRUE)
+x <- apply(munich_house[, -c(1, 2)], 2, scale) # standardize input
+y <- munich_house[, 1] -  mean(munich_house[, 1]) # centralize output to remove intercept
+
+
+```
+
 
 ## Lasso
 
