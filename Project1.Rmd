@@ -23,6 +23,7 @@ library(grplasso)
 library(corrplot)
 library(RColorBrewer)
 library(leaps)
+library(gglasso)
 ```
 
 # The Data Set 
@@ -61,7 +62,7 @@ str(munich_house)
 
 We store the data set in an R data frame for all further computations. 
 
-```{r buildDataFrame,eval=TRUE,echo=TRUE} 
+```{r buildDataFrame,eval=TRUE,echo=FALSE} 
 # Create model matrix without intercept and nmqm 
 # (since nmqm*wfl=nm gives the response directly)
 x_mod <- model.matrix(nm~.-nmqm,data=munich_house)[,-1] 
@@ -86,11 +87,11 @@ Remark: Interestingly in the regression, the significance of different `bj`s and
 
 # Shrinkage
 
-After we saw the results for the linear regression, we continue with shrinkage methods.
+After we saw the results for the linear regression, we continue with several methods including subset selection and shrinkage methods.
 
 ## Subset selection
 
-```{r subset, eval = TRUE, echo = TRUE}
+```{r subset, eval = TRUE, echo = FALSE}
 munich_house <- read.table(
   "https://data.ub.uni-muenchen.de/2/1/miete03.asc",
   sep="\t", header=TRUE)
@@ -102,31 +103,25 @@ sumbests <- summary(bests)
 print(sumbests)
 which.min(sumbests$cp)
 lm_sub <- lm(y ~ wfl + bj + bez + wohngut + ww0 + badkach0 + kueche, data = data)
-summary(lm_sub)
-confint(lm_sub)
+# summary(lm_sub)
+# confint(lm_sub)
 
 ```
 
 ## Ridge
 
-```{r ridge, eval = TRUE, echo = TRUE}
-munich_house <- read.table(
-  "https://data.ub.uni-muenchen.de/2/1/miete03.asc",
-  sep="\t", header=TRUE)
-x <- apply(munich_house[, -c(1, 2)], 2, scale) # standardize input
-y <- munich_house[, 1] -  mean(munich_house[, 1]) # centralize output to remove intercept
-data <- data.frame(y, x)
+```{r ridge, eval = TRUE, echo = FALSE}
 start <- glmnet(x = x, y = y, alpha = 0)
 autolambda <- start$lambda
 newlambda <- c(autolambda, 10, 5, 3, 1, 0.5, 0.1) # add more to approach zero lambda
 ridge_fit <- glmnet(x, y, alpha = 0, lambda = newlambda)
-plot(ridge_fit, xvar = "lambda", label = T)
+# plot(ridge_fit, xvar = "lambda", label = T)
 cv.ridge <- cv.glmnet(x, y, alpha = 0, lambda = newlambda)
-print(paste("The lamda giving the smallest CV error",cv.ridge$lambda.min))
-print(paste("The 1sd err method lambda",cv.ridge$lambda.1se))
-plot(cv.ridge)
-plot(ridge_fit, xvar = "lambda", label = T) + abline(v = log(cv.ridge$lambda.1se))
-coef(cv.ridge)
+# print(paste("The lamda giving the smallest CV error",cv.ridge$lambda.min))
+# print(paste("The 1sd err method lambda",cv.ridge$lambda.1se))
+# plot(cv.ridge)
+# plot(ridge_fit, xvar = "lambda", label = T) + abline(v = log(cv.ridge$lambda.1se))
+# coef(cv.ridge)
 
 ```
 
@@ -154,9 +149,9 @@ Above we considered a fixed $\lambda$, now we analyse which $\lambda$ is optimal
 ```{r lassoCV, eval=TRUE, echo=FALSE}
 # Choosing optimal lambda performing Crossvalidation
 cv_gen_mod=cv.glmnet(x=x_mod,y=y_mod,alpha=1)
-print(paste("The lamda giving the smallest CV error",cv_gen_mod$lambda.min))
-print(paste("The 1sd err method lambda",cv_gen_mod$lambda.1se))
-plot(cv_gen_mod)
+# print(paste("The lamda giving the smallest CV error",cv_gen_mod$lambda.min))
+# print(paste("The 1sd err method lambda",cv_gen_mod$lambda.1se))
+# plot(cv_gen_mod)
 ```
 
 
@@ -187,9 +182,9 @@ grp_mod <- grplasso(x=x_mod_group, y = y_mod, index = index_mod, lambda = grp_la
 
 
 ## Plot coefficient paths
-plot(grp_mod) 
-str(grp_mod)
-coef(grp_mod) 
+# plot(grp_mod) 
+# str(grp_mod)
+# coef(grp_mod) 
 
 ```
 
@@ -202,7 +197,6 @@ In the grouped lasso, the `bj` and `bez` are all shrinked or are all inclueded, 
 
 ```{r final, eval=TRUE, echo=FALSE}
 #CV for å finne optimal lambda? Bootstrapping? 
-library(gglasso)
 #package chosen lambdagrid
 fitls_mod <- gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls")
 plot(fitls_mod)
