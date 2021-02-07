@@ -46,7 +46,7 @@ The data set has the covariates
 and the response
 -   `nm`: rental price (numeric).
 
-```{r loadData,eval=TRUE,echo=FALSE}
+```{r loadData,eval=TRUE,echo=FALSE, fig.width = 12, fig.align="center"}
 # Load data set
 munich_house <- read.table(
   "https://data.ub.uni-muenchen.de/2/1/miete03.asc",

@@ -123,7 +123,14 @@ library(GGally)
 library(ggplot2)
 data(diamonds, package = "ggplot2")
 diamonds.samp <- diamonds[sample(1:dim(diamonds)[1], 200), ]
-
+ggpairs(
+    diamonds.samp[, 1:2], 
+    mapping = ggplot2::aes(color = cut), 
+    upper = list(continuous = wrap("density", alpha = 0.5), combo = "box"), 
+    lower = list(continuous = wrap("points", alpha = 0.3), combo = wrap("dot", alpha = 0.4)), 
+    diag = list(continuous = wrap("densityDiag")), 
+    title = "Diamonds"
+)
 
 
 
