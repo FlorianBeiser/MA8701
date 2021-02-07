@@ -20,6 +20,9 @@ library(GGally)
 library(tidyverse)
 library(glmnet)
 library(grplasso)
+library(corrplot)
+library(RColorBrewer)
+library(leaps)
 ```
 
 # The Data Set 
@@ -47,6 +50,9 @@ and the response
 munich_house <- read.table(
   "https://data.ub.uni-muenchen.de/2/1/miete03.asc",
   sep="\t", header=TRUE)
+M <- cor(munich_house)
+corrplot(M, type = "upper")
+# corrplot(M, type = "upper", order = "hclust", col = brewer.pal(n = 8, name = "RdYlBu"))
 # Transform bez and bj to factor since interpreted as numeric by read.table
 munich_house$bez=as.factor(munich_house$bez) 
 munich_house$bj=as.factor(munich_house$bj)
@@ -82,14 +88,45 @@ Remark: Interestingly in the regression, the significance of different `bj`s and
 
 After we saw the results for the linear regression, we continue with shrinkage methods.
 
+## Subset selection
+
+```{r subset, eval = TRUE, echo = TRUE}
+munich_house <- read.table(
+  "https://data.ub.uni-muenchen.de/2/1/miete03.asc",
+  sep="\t", header=TRUE)
+x <- apply(munich_house[, -c(1, 2)], 2, scale) # standardize input
+y <- munich_house[, 1] -  mean(munich_house[, 1]) # centralize output to remove intercept
+data <- data.frame(y, x)
+bests <- regsubsets(x, y)
+sumbests <- summary(bests)
+print(sumbests)
+which.min(sumbests$cp)
+lm_sub <- lm(y ~ wfl + bj + bez + wohngut + ww0 + badkach0 + kueche, data = data)
+summary(lm_sub)
+confint(lm_sub)
+
+```
+
 ## Ridge
+
 ```{r ridge, eval = TRUE, echo = TRUE}
 munich_house <- read.table(
   "https://data.ub.uni-muenchen.de/2/1/miete03.asc",
   sep="\t", header=TRUE)
 x <- apply(munich_house[, -c(1, 2)], 2, scale) # standardize input
 y <- munich_house[, 1] -  mean(munich_house[, 1]) # centralize output to remove intercept
-
+data <- data.frame(y, x)
+start <- glmnet(x = x, y = y, alpha = 0)
+autolambda <- start$lambda
+newlambda <- c(autolambda, 10, 5, 3, 1, 0.5, 0.1) # add more to approach zero lambda
+ridge_fit <- glmnet(x, y, alpha = 0, lambda = newlambda)
+plot(ridge_fit, xvar = "lambda", label = T)
+cv.ridge <- cv.glmnet(x, y, alpha = 0, lambda = newlambda)
+print(paste("The lamda giving the smallest CV error",cv.ridge$lambda.min))
+print(paste("The 1sd err method lambda",cv.ridge$lambda.1se))
+plot(cv.ridge)
+plot(ridge_fit, xvar = "lambda", label = T) + abline(v = log(cv.ridge$lambda.1se))
+coef(cv.ridge)
 
 ```
 
@@ -103,11 +140,11 @@ plot(gen_lambda_mod)
 
 plot(gen_mod) #plot against the L1 norm
 plot(gen_mod,xvar="lambda",label=TRUE)
-abline(v=log(cv_gen_mod$lambda.1se)) #use 1sd error rule default
+# abline(v=log(cv_gen_mod$lambda.1se)) #use 1sd error rule default
 
-results_mod=cbind(coef(gen_mod,s=cv_gen_mod$lambda.1se),coef(lm_mod))
-colnames(results_mod)=c("general lasso","vanilla LS")
-print(results_mod)
+# results_mod=cbind(coef(gen_mod,s=cv_gen_mod$lambda.1se),coef(lm_mod))
+# colnames(results_mod)=c("general lasso","vanilla LS")
+# print(results_mod)
 ```
 
 For the $\lambda$ with one standard deviation, we observe that many of the `bj`s and `bez`s get shrinked, but not all of them - and the values differ from the linear regression. Whereas the other kept covariants roughly keep their parameter.
