@@ -47,7 +47,6 @@ and the response
 munich_house <- read.table(
   "https://data.ub.uni-muenchen.de/2/1/miete03.asc",
   sep="\t", header=TRUE)
-
 # Transform bez and bj to factor since interpreted as numeric by read.table
 munich_house$bez=as.factor(munich_house$bez) 
 munich_house$bj=as.factor(munich_house$bj)
