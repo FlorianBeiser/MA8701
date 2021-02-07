@@ -57,7 +57,8 @@ corrplot(M, type = "upper")
 # Transform bez and bj to factor since interpreted as numeric by read.table
 munich_house$bez=as.factor(munich_house$bez) 
 munich_house$bj=as.factor(munich_house$bj)
-str(munich_house)
+head(munich_house)
+# str(munich_house)
 ```
 
 We store the data set in an R data frame for all further computations. 
@@ -80,7 +81,7 @@ We start with a vanilla regression for reference.
 # Vanilla regression model
 lm_mod <- lm(nm~.,data=df_mod) 
 #Printing the summary to assess significant parameters
-summary(lm_mod)
+# summary(lm_mod)
 ```
 
 Remark: Interestingly in the regression, the significance of different `bj`s and `bez`s varies a lot.  
@@ -89,7 +90,7 @@ Remark: Interestingly in the regression, the significance of different `bj`s and
 
 After we saw the results for the linear regression, we continue with several methods including subset selection and shrinkage methods.
 
-## Subset selection
+<!-- ## Subset selection -->
 
 ```{r subset, eval = TRUE, echo = FALSE}
 munich_house <- read.table(
@@ -100,15 +101,15 @@ y <- munich_house[, 1] -  mean(munich_house[, 1]) # centralize output to remove 
 data <- data.frame(y, x)
 bests <- regsubsets(x, y)
 sumbests <- summary(bests)
-print(sumbests)
-which.min(sumbests$cp)
+# print(sumbests)
+# which.min(sumbests$cp)
 lm_sub <- lm(y ~ wfl + bj + bez + wohngut + ww0 + badkach0 + kueche, data = data)
 # summary(lm_sub)
 # confint(lm_sub)
 
 ```
 
-## Ridge
+<!-- ## Ridge -->
 
 ```{r ridge, eval = TRUE, echo = FALSE}
 start <- glmnet(x = x, y = y, alpha = 0)
@@ -126,7 +127,7 @@ cv.ridge <- cv.glmnet(x, y, alpha = 0, lambda = newlambda)
 ```
 
 
-## Lasso
+<!-- ## Lasso -->
 
 ```{r lasso, eval=TRUE, echo=FALSE}
 gen_mod <- glmnet(x=x_mod,y=y_mod,alpha=1,standardize=TRUE)
@@ -180,7 +181,6 @@ grp_mod <- grplasso(x=x_mod_group, y = y_mod, index = index_mod, lambda = grp_la
                     penscale = sqrt,
                     control = grpl.control(update.hess = "lambda", trace = 0))
 
-
 ## Plot coefficient paths
 # plot(grp_mod) 
 # str(grp_mod)
@@ -199,28 +199,28 @@ In the grouped lasso, the `bj` and `bez` are all shrinked or are all inclueded, 
 #CV for å finne optimal lambda? Bootstrapping? 
 #package chosen lambdagrid
 fitls_mod <- gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls")
-plot(fitls_mod)
+# plot(fitls_mod)
 #own defined lambdagrid
 fitls_mod <- gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=grp_lambda_mod)
-plot(fitls_mod)
+# plot(fitls_mod)
 
 #crossvalidation on self defined lambdagrid - this takes some time
 cvfitls_mod <- cv.gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=grp_lambda_mod)
-plot(cvfitls_mod)
-str(cvfitls_mod)
+# plot(cvfitls_mod)
+# str(cvfitls_mod)
 cvfitls_mod$lambda.1se
 
 #fit with optimal lambda on defined lambda grid(either package made or made by me)
 fin_mod=gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=cvfitls_mod$lambda.1se)
-coef(fin_mod)
+# coef(fin_mod)
 
 #testing with a fixed lambda
 test_mod=gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=5)
-coef(test_mod)
+# coef(test_mod)
 
 #final results, group lasso either shrinks all or nothing and even increases some estimated parameter coefficients, what do we take away from this? 
 results_mod=cbind(coef(fin_mod),coef(gen_mod,s=cv_gen_mod$lambda.1se),coef(lm_mod))
 colnames(results_mod)=c("group lasso","general lasso","vanilla LS")
-print(results_mod)
+# print(results_mod)
 
 ```
