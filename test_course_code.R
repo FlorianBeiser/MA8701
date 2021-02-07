@@ -60,7 +60,69 @@ ds = read.table("https://raw.githubusercontent.com/mettelang/MA8701V2021/main/Pa
 ds$chd = as.factor(ds$chd)
 ds$famhist = as.factor(ds$famhist)
 dim(ds)
+colnames(ds)
+head(ds)
 
+# standardize xs
+xs = model.matrix(chd~., data = ds)[, -1]
+xss = scale(xs)
+ys = as.numeric(ds[, 10]) - 1
+head(xss)
+head(ys)
+head(xs)
+print(ys)
+print(as.numeric(ds[, 10]) - 1)
+table(ys)
+
+dss = data.frame(ys, xss)
+colnames(dss)[1] = "chd"
+apply(dss, 2, sd)
+apply(dss, 2, mean)
+ggpairs(dss)
+
+
+glm_heart = glm(chd~., data = dss, family = "binomial")
+summary(glm_heart)
+exp(coef(glm_heart))
+
+ridgefit = glmnet(x = xss, y = ys, alpha = 0, standardize = F, family = "binomial")
+plot(ridgefit, xvar = "lambda", label = T)
+
+# cross validation
+cv.ridge = cv.glmnet(x = xss, y = ys, alpha = 0, standardize = F, family = "binomial")
+print(paste("The lambda giving the smallest CV error", cv.ridge$lambda.min))
+print(paste("The 1st err method lambda", cv.ridge$lambda.1se))
+plot(cv.ridge)
+plot(ridgefit, xvar = "lambda", label = T)
+abline(v = log(cv.ridge$lambda.1se))
+print(cbind(coef(ridgefit, s = cv.ridge$lambda.min), coef(glm_heart)))
+print(cbind(coef(ridgefit, s = cv.ridge$lambda.1se), coef(glm_heart)))
+
+cbind(1:9, colnames(xss))
+lassofit = glmnet(x = xss, y = ys, alpha = 1, standardize = F, family = "binomial")
+plot(lassofit, xvar = "lambda", label = T)
+
+cv.lasso = cv.glmnet(x = xss, y = ys, alpha = 1, standardize = F, family = "binomial")
+print(paste("The lambda giving the smallest CV error", cv.lasso$lambda.min))
+print(paste("The 1sd err method lambda", cv.lasso$lambda.1se))
+plot(cv.lasso)
+plot(lassofit, xvar = "lambda", label = T)
+abline(v = log(cv.lasso$lambda.1se))
+resmat = cbind(coef(lassofit, s = cv.lasso$lambda.1se), coef(ridgefit, s = cv.ridge$lambda.1se), coef(glm_heart))
+colnames(resmat) = c("lasso logistic", "ridge logistic", "logistic")
+print(resmat)
+
+diabetes = read.table("https://web.stanford.edu/~hastie/Papers/LARS/diabetes.data", header = T)
+attach(diabetes)
+library(regress)
+reg.ols = regress(x, y)
+
+
+
+library(GGally)
+library(ggplot2)
+data(diamonds, package = "ggplot2")
+diamonds.samp <- diamonds[sample(1:dim(diamonds)[1], 200), ]
 
 
 
