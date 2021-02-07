@@ -22,7 +22,6 @@ library(glmnet)
 library(grplasso)
 ```
 
-test of adding things
 # The Data Set 
 
 For our project work we use the Munich Rent 2003 data set as described in https://rdrr.io/cran/LinRegInteractive/man/munichrent03.html.
@@ -57,7 +56,7 @@ str(munich_house)
 
 We store the data set in an R data frame for all further computations. 
 
-```{r buildDataFrame,eval=TRUE,echo=FALSE} 
+```{r buildDataFrame,eval=TRUE,echo=TRUE} 
 # Create model matrix without intercept and nmqm 
 # (since nmqm*wfl=nm gives the response directly)
 x_mod <- model.matrix(nm~.-nmqm,data=munich_house)[,-1] 
