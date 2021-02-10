@@ -20,7 +20,7 @@ In this project, we analyse a real dataset using shrinkage methods.
 
 To pursue the idea of reproducible research, the chosen dataset as well as the code for our analysis are publicly accessible:
 
-* dataset: https://rdrr.io/cran/LinRegInteractive/man/munichrent03.html
+* dataset: https://data.ub.uni-muenchen.de/2/1/miete03.asc
 * code: https://github.com/FlorianBeiser/MA8701
 
 ```{r rpackages,eval=TRUE,echo=FALSE, include=FALSE}
@@ -40,41 +40,40 @@ library(gglasso)
 For our project work we use the Munich Rent 2003 data set as described in https://rdrr.io/cran/LinRegInteractive/man/munichrent03.html.
 
 The data set has the covariates
--   `nmqm`: rent per square meter (numeric)
--   `wfl`: area in square meters (numeric)
--   `rooms`: number of rooms (numeric)
+
+-   `nmqm`: rent per square meter (double)
+-   `wfl`: area in square meters (int)
+-   `rooms`: number of rooms (int)
 -   `bj`: year of construction (factor)
 -   `bez`: district (factor)
--   `wohngut`: quality of location (factor)
--   `wohnbest`: high quality of location (factor)
--   `ww0`: hot water supply available (factor)
--   `zh0`: central heating (factor)
--   `badkach0`: tiled bathroom (factor)
--   `badextra`: high-quality bathroom (factor)
--   `kueche`: upscale kitchen equipment (factor)
+-   `wohngut`: quality of location (int)
+-   `wohnbest`: high quality of location (int)
+-   `ww0`: hot water supply available (int)
+-   `zh0`: central heating (int)
+-   `badkach0`: tiled bathroom (int)
+-   `badextra`: high-quality bathroom (int)
+-   `kueche`: upscale kitchen equipment (int)
 and the response
--   `nm`: rental price (numeric).
+-   `nm`: rental price (double).
 
-```{r loadData,eval=TRUE,echo=FALSE, fig.width = 12, fig.align="center"}
+```{r loadData,eval=TRUE,echo=FALSE, fig.width = 12, fig.align="center", fig.cap="\\label{fig:corrplot}Correlation between the covariates"}
 # Load data set
 munich_house <- read.table(
   "https://data.ub.uni-muenchen.de/2/1/miete03.asc",
   sep="\t", header=TRUE)
+# Observe correlations between covariates
 M <- cor(munich_house)
-corrplot(M, type = "upper")
-# corrplot(M, type = "upper", order = "hclust", col = brewer.pal(n = 8, name = "RdYlBu"))
-# Transform bez and bj to factor since interpreted as numeric by read.table
+corrplot(M, type = "upper", order = "hclust", col = brewer.pal(n = 8, name = "RdYlBu"))
+# Transform bez and bj to factor since falsely interpreted as numeric by read.table
 munich_house$bez=as.factor(munich_house$bez) 
 munich_house$bj=as.factor(munich_house$bj)
-head(munich_house)
-# str(munich_house)
 ```
 
-We store the data set in an R data frame for all further computations. 
+For the data anaysis, the aim is to perform regression. Our data set is suited for that, since it suffers from multicolinearity as we see in Figure \ref{fig:corrplot}. For further data analysis, we store the data set in an R data frame. 
 
 ```{r buildDataFrame,eval=TRUE,echo=FALSE} 
-# Create model matrix without intercept and nmqm 
-# (since nmqm*wfl=nm gives the response directly)
+# Create model matrix without intercept 
+# (since nmqm*wfl=nm gives the response directly, nmqm is removed)
 x_mod <- model.matrix(nm~.-nmqm,data=munich_house)[,-1] 
 y_mod <- munich_house$nm
 df_mod <- data.frame(y_mod,x_mod)
@@ -90,30 +89,30 @@ We start with a vanilla regression for reference.
 # Vanilla regression model
 lm_mod <- lm(nm~.,data=df_mod) 
 #Printing the summary to assess significant parameters
-# summary(lm_mod)
+summary(lm_mod)
 ```
 
-Remark: Interestingly in the regression, the significance of different `bj`s and `bez`s varies a lot.  
+Clearly, the area `wfl` is stronly related to the rent price. Surprisingly in the regression, the significance of different `bj`s and `bez`s varies a lot.  
+
+
 
 # Shrinkage
 
-After we saw the results for the linear regression, we continue with several methods including subset selection and shrinkage methods.
+After we saw the results for the plain linear regression, we continue with several methods including subset selection and shrinkage methods.
 
 <!-- ## Subset selection -->
 
 ```{r subset, eval = TRUE, echo = FALSE}
-munich_house <- read.table(
-  "https://data.ub.uni-muenchen.de/2/1/miete03.asc",
-  sep="\t", header=TRUE)
+
 x <- apply(munich_house[, -c(1, 2)], 2, scale) # standardize input
 y <- munich_house[, 1] -  mean(munich_house[, 1]) # centralize output to remove intercept
 data <- data.frame(y, x)
 bests <- regsubsets(x, y)
 sumbests <- summary(bests)
-# print(sumbests)
+print(sumbests)
 # which.min(sumbests$cp)
 lm_sub <- lm(y ~ wfl + bj + bez + wohngut + ww0 + badkach0 + kueche, data = data)
-# summary(lm_sub)
+summary(lm_sub)
 # confint(lm_sub)
 
 ```
