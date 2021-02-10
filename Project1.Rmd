@@ -1,8 +1,8 @@
 ---
 subtitle: "MA8701"
-title: "Project 1"
+title: "Data Analysis Project 1"
 author: "Group 5 : Yellow Submarine"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
+date: "`r format(Sys.time(), '15 February, 2021')`"
 output: 
   #html_document
   pdf_document
@@ -14,7 +14,16 @@ knitr::opts_chunk$set(echo = TRUE,tidy=TRUE,message=FALSE,warning=FALSE,strip.wh
                       cache=TRUE, size="scriptsize",fig.width=4, fig.height=3)
 ```
 
-```{r rpackages,eval=TRUE,echo=FALSE}
+In this project, we analyse a real dataset using shrinkage methods. 
+
+## Note on Open Science
+
+To pursue the idea of reproducible research, the chosen dataset as well as the code for our analysis are publicly accessible:
+
+* dataset: https://rdrr.io/cran/LinRegInteractive/man/munichrent03.html
+* code: https://github.com/FlorianBeiser/MA8701
+
+```{r rpackages,eval=TRUE,echo=FALSE, include=FALSE}
 #load packages
 library(GGally)
 library(tidyverse)
