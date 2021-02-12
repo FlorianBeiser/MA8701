@@ -103,7 +103,6 @@ After we saw the results for the plain linear regression, we continue with sever
 <!-- ## Subset selection -->
 
 ```{r subset, eval = TRUE, echo = FALSE}
-
 x <- apply(munich_house[, -c(1, 2)], 2, scale) # standardize input
 y <- munich_house[, 1] -  mean(munich_house[, 1]) # centralize output to remove intercept
 data <- data.frame(y, x)
@@ -114,7 +113,6 @@ print(sumbests)
 lm_sub <- lm(y ~ wfl + bj + bez + wohngut + ww0 + badkach0 + kueche, data = data)
 summary(lm_sub)
 # confint(lm_sub)
-
 ```
 
 <!-- ## Ridge -->
