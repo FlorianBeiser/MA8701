@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2020.9.10)  12 FEB 2021 13:35
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020) (preloaded format=pdflatex 2020.9.10)  12 FEB 2021 13:41
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -544,62 +544,40 @@ File: Project1_files/figure-latex/ridge-2.pdf Graphic file (type pdf)
 Package pdftex.def Info: Project1_files/figure-latex/ridge-2.pdf  used on input
  line 260.
 (pdftex.def)             Requested size: 255.95561pt x 168.62958pt.
-<Project1_files/figure-latex/lasso-1.pdf, id=29, 255.95625pt x 145.54375pt>
-File: Project1_files/figure-latex/lasso-1.pdf Graphic file (type pdf)
-<use Project1_files/figure-latex/lasso-1.pdf>
-Package pdftex.def Info: Project1_files/figure-latex/lasso-1.pdf  used on input
- line 274.
-(pdftex.def)             Requested size: 255.95561pt x 145.54338pt.
-<Project1_files/figure-latex/lasso-2.pdf, id=30, 263.98625pt x 168.63pt>
-File: Project1_files/figure-latex/lasso-2.pdf Graphic file (type pdf)
-<use Project1_files/figure-latex/lasso-2.pdf>
-Package pdftex.def Info: Project1_files/figure-latex/lasso-2.pdf  used on input
- line 275.
-(pdftex.def)             Requested size: 263.98961pt x 168.63214pt.
-<Project1_files/figure-latex/lasso-3.pdf, id=31, 255.95625pt x 168.63pt>
-File: Project1_files/figure-latex/lasso-3.pdf Graphic file (type pdf)
-<use Project1_files/figure-latex/lasso-3.pdf>
-Package pdftex.def Info: Project1_files/figure-latex/lasso-3.pdf  used on input
- line 276.
-(pdftex.def)             Requested size: 255.95561pt x 168.62958pt.
-
-Overfull \hbox (52.41241pt too wide) in paragraph at lines 274--277
-[] []
- []
-
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 278.
 [2 <./Project1_files/figure-latex/loadData-1.pdf>] [3 <./Project1_files/figure-
-latex/ridge-1.pdf> <./Project1_files/figure-latex/ridge-2.pdf>] [4 <./Project1_
-files/figure-latex/lasso-1.pdf> <./Project1_files/figure-latex/lasso-2.pdf> <./
-Project1_files/figure-latex/lasso-3.pdf>]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 278.
+latex/ridge-1.pdf> <./Project1_files/figure-latex/ridge-2.pdf>]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 288.
+[4]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 288.
 (./Project1.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 278.
-Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 278.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 288.
+Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 288.
 
 LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 13496 strings out of 480608
- 199622 string characters out of 5903630
+ 13484 strings out of 480608
+ 198941 string characters out of 5903630
  492848 words of memory out of 5000000
- 29101 multiletter control sequences out of 15000+600000
- 577521 words of font info for 81 fonts, out of 8000000 for 9000
+ 29086 multiletter control sequences out of 15000+600000
+ 577770 words of font info for 84 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  41i,6n,42p,807b,466s stack positions out of 5000i,500n,10000p,200000b,80000s
-{/usr/local/texlive/2020/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}{/usr/local
-/texlive/2020/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}</usr/local/texlive/2020/
-texmf-dist/fonts/type1/public/lm/lmbx12.pfb></usr/local/texlive/2020/texmf-dist
-/fonts/type1/public/lm/lmr10.pfb></usr/local/texlive/2020/texmf-dist/fonts/type
-1/public/lm/lmr12.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/lm
-/lmr17.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/lm/lmtk10.pfb
-></usr/local/texlive/2020/texmf-dist/fonts/type1/public/lm/lmtt10.pfb></usr/loc
-al/texlive/2020/texmf-dist/fonts/type1/public/lm/lmtti10.pfb>
-Output written on Project1.pdf (4 pages, 270205 bytes).
+{/usr/local/texlive/2020/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}{/usr/lo
+cal/texlive/2020/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}{/usr/local/texlive/2
+020/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}</usr/local/texlive/2020/texmf-dist
+/fonts/type1/public/lm/lmbx12.pfb></usr/local/texlive/2020/texmf-dist/fonts/typ
+e1/public/lm/lmmi10.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/
+lm/lmr10.pfb></usr/local/texlive/2020/texmf-dist/fonts/type1/public/lm/lmr12.pf
+b></usr/local/texlive/2020/texmf-dist/fonts/type1/public/lm/lmr17.pfb></usr/loc
+al/texlive/2020/texmf-dist/fonts/type1/public/lm/lmtk10.pfb></usr/local/texlive
+/2020/texmf-dist/fonts/type1/public/lm/lmtt10.pfb></usr/local/texlive/2020/texm
+f-dist/fonts/type1/public/lm/lmtti10.pfb>
+Output written on Project1.pdf (4 pages, 221483 bytes).
 PDF statistics:
- 151 PDF objects out of 1000 (max. 8388607)
- 118 compressed objects within 2 object streams
+ 132 PDF objects out of 1000 (max. 8388607)
+ 107 compressed objects within 2 object streams
  20 named destinations out of 1000 (max. 500000)
- 10319 words of extra memory for PDF output out of 12000 (max. 10000000)
+ 10304 words of extra memory for PDF output out of 12000 (max. 10000000)
 

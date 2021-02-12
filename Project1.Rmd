@@ -99,7 +99,6 @@ print(data.frame(summary(lm_mod)$coef[summary(lm_mod)$coef[,4] <= .05, 4][1:4]))
 After we saw the results for the plain linear regression, we continue with the shrinkage methods. For comparison, ridge method and group lasso are both applied. 
     
 ## Ridge
-
 ```{r ridge, eval = TRUE, echo = TRUE, fig.align="center", fig.cap="\\label{fig:ridge_coeff}Coefficient path along lambda variation"}
 start <- glmnet(x = x_mod, y = y_mod, standardize=FALSE, alpha = 0)
 autolambda <- start$lambda
@@ -115,33 +114,28 @@ plot(ridge_fit, xvar = "lambda", label = T) + abline(v = log(cv.ridge$lambda.1se
 
 
 ## Lasso
-
 ```{r lasso, eval=TRUE, echo=FALSE}
 gen_mod <- glmnet(x=x_mod,y=y_mod,alpha=1,standardize=TRUE)
 gen_lambda_mod <- gen_mod$lambda
-plot(gen_lambda_mod)
-
-plot(gen_mod) #plot against the L1 norm
-plot(gen_mod,xvar="lambda",label=TRUE)
-# abline(v=log(cv_gen_mod$lambda.1se)) #use 1sd error rule default
-
+# plot(gen_lambda_mod)
+# plot(gen_mod) #plot against the L1 norm
+# plot(gen_mod,xvar="lambda",label=TRUE) + abline(v=log(gen_mod$lambda.1se)) #use 1sd error rule default
 # results_mod=cbind(coef(gen_mod,s=cv_gen_mod$lambda.1se),coef(lm_mod))
 # colnames(results_mod)=c("general lasso","vanilla LS")
 # print(results_mod)
 ```
 
-<!-- For the $\lambda$ with one standard deviation, we observe that many of the `bj`s and `bez`s get shrinked, but not all of them - and the values differ from the linear regression. Whereas the other kept covariants roughly keep their parameter. -->
+For the $\lambda$ with one standard deviation, we observe that many of the `bj`s and `bez`s get shrinked, but not all of them - and the values differ from the linear regression. Whereas the other kept covariants roughly keep their parameter.
 
-<!-- Above we considered a fixed $\lambda$, now we analyse which $\lambda$ is optimal using cross validation. -->
+Above we considered a fixed $\lambda$, now we analyse which $\lambda$ is optimal using cross validation.
 
-<!-- ```{r lassoCV, eval=TRUE, echo=FALSE} -->
-<!-- # Choosing optimal lambda performing Crossvalidation -->
-<!-- cv_gen_mod=cv.glmnet(x=x_mod,y=y_mod,alpha=1) -->
-<!-- # print(paste("The lamda giving the smallest CV error",cv_gen_mod$lambda.min)) -->
-<!-- # print(paste("The 1sd err method lambda",cv_gen_mod$lambda.1se)) -->
-<!-- # plot(cv_gen_mod) -->
-<!-- ``` -->
-
+```{r lassoCV, eval=TRUE, echo=FALSE}
+# Choosing optimal lambda performing Crossvalidation
+cv_gen_mod=cv.glmnet(x=x_mod,y=y_mod,alpha=1)
+# print(paste("The lamda giving the smallest CV error",cv_gen_mod$lambda.min))
+# print(paste("The 1sd err method lambda",cv_gen_mod$lambda.1se))
+# plot(cv_gen_mod)
+```
 
 <!-- ## Group lasso -->
 
@@ -175,9 +169,7 @@ plot(gen_mod,xvar="lambda",label=TRUE)
 
 <!-- ``` -->
 
-
-<!-- In the grouped lasso, the `bj` and `bez` are all shrinked or are all inclueded, respectively. This coincides better with our intuition, that this criterion is considered or not considered. Whereas in the regression and lasso before, just some years of construction and some areas where significant. -->
-
+In the grouped lasso, the `bj` and `bez` are all shrinked or are all inclueded, respectively. This coincides better with our intuition, that this criterion is considered or not considered. Whereas in the regression and lasso before, just some years of construction and some areas where significant.
 
 <!-- ```{r final, eval=TRUE, echo=FALSE} -->
 
