@@ -109,7 +109,8 @@ cv.ridge <- cv.glmnet(x_mod, y_mod, standardize=TRUE, alpha = 0, lambda = newlam
 print(paste("The lamda giving the smallest CV error",cv.ridge$lambda.min))
 print(paste("The 1sd err method lambda",cv.ridge$lambda.1se))
 plot(cv.ridge)
-plot(ridge_fit, xvar = "lambda", label = T) + abline(v = log(cv.ridge$lambda.1se))
+plot(ridge_fit, xvar = "lambda", label = T) 
+abline(v = log(cv.ridge$lambda.1se))
 ```
 
 
