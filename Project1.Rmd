@@ -83,53 +83,39 @@ colnames(df_mod)[1]="nm"
 
 # Regression
 
-We start with a vanilla LM regression for reference.
+We start with a vanilla LM regression for reference. Only significant coeffcients are printed. Clearly, the area `wfl` is strongly related to the rent price. Surprisingly in the regression, the significance of different `bj`s and `bez`s varies a lot.
 ```{r regression, eval=TRUE, echo=FALSE}
 # Vanilla regression model
 lm_mod <- lm(nm~.,data=df_mod)
 #Printing the summary to assess significant parameters
 # summary(lm_mod)
-print(data.frame(summary(lm_mod)$coef[summary(lm_mod)$coef[,4] <= .05, 4][1:4]))
+print(data.frame(summary(lm_mod)$coef[summary(lm_mod)$coef[,4] <= .05, 4][1:4])) # to only print signficant coeff
+# print(data.frame(summary(lm_mod)$coef))
 ```
-
-Clearly, the area `wfl` is strongly related to the rent price. Surprisingly in the regression, the significance of different `bj`s and `bez`s varies a lot.
 
 
 # Shrinkage
 
-After we saw the results for the plain linear regression, we continue with the shrinkage methods.
+After we saw the results for the plain linear regression, we continue with the shrinkage methods. For comparison, ridge method and group lasso are both applied. 
+    
+## Ridge
 
-<!-- <!-- <!-- ## Subset selection --> --> -->
+```{r ridge, eval = TRUE, echo = FALSE}
+x <- apply(munich_house[, -c(1, 2)], 2, scale) # standardize input
+y <- munich_house[, 1] - mean(munich_house[, 1]) # centralize output to remove intercept
+start <- glmnet(x = x, y = y, alpha = 0)
+autolambda <- start$lambda
+newlambda <- c(autolambda, 10, 5, 3, 1, 0.5, 0.1) # add more to approach zero lambda
+ridge_fit <- glmnet(x, y, alpha = 0, lambda = newlambda)
+# plot(ridge_fit, xvar = "lambda", label = T)
+cv.ridge <- cv.glmnet(x, y, alpha = 0, lambda = newlambda)
+# print(paste("The lamda giving the smallest CV error",cv.ridge$lambda.min))
+# print(paste("The 1sd err method lambda",cv.ridge$lambda.1se))
+# plot(cv.ridge)
+plot(ridge_fit, xvar = "lambda", label = T) + abline(v = log(cv.ridge$lambda.1se))
+# coef(cv.ridge)
 
-<!-- <!-- ```{r subset, eval = TRUE, echo = FALSE} --> -->
-<!-- <!-- x <- apply(munich_house[, -c(1, 2)], 2, scale) # standardize input --> -->
-<!-- <!-- y <- munich_house[, 1] -  mean(munich_house[, 1]) # centralize output to remove intercept --> -->
-<!-- <!-- data <- data.frame(y, x) --> -->
-<!-- <!-- bests <- regsubsets(x, y) --> -->
-<!-- <!-- sumbests <- summary(bests) --> -->
-<!-- <!-- print(sumbests) --> -->
-<!-- <!-- # which.min(sumbests$cp) --> -->
-<!-- <!-- lm_sub <- lm(y ~ wfl + bj + bez + wohngut + ww0 + badkach0 + kueche, data = data) --> -->
-<!-- <!-- summary(lm_sub) --> -->
-<!-- <!-- # confint(lm_sub) --> -->
-<!-- <!-- ``` --> -->
-
-<!-- <!-- ## Ridge --> -->
-
-<!-- ```{r ridge, eval = TRUE, echo = FALSE} -->
-<!-- start <- glmnet(x = x, y = y, alpha = 0) -->
-<!-- autolambda <- start$lambda -->
-<!-- newlambda <- c(autolambda, 10, 5, 3, 1, 0.5, 0.1) # add more to approach zero lambda -->
-<!-- ridge_fit <- glmnet(x, y, alpha = 0, lambda = newlambda) -->
-<!-- # plot(ridge_fit, xvar = "lambda", label = T) -->
-<!-- cv.ridge <- cv.glmnet(x, y, alpha = 0, lambda = newlambda) -->
-<!-- # print(paste("The lamda giving the smallest CV error",cv.ridge$lambda.min)) -->
-<!-- # print(paste("The 1sd err method lambda",cv.ridge$lambda.1se)) -->
-<!-- # plot(cv.ridge) -->
-<!-- # plot(ridge_fit, xvar = "lambda", label = T) + abline(v = log(cv.ridge$lambda.1se)) -->
-<!-- # coef(cv.ridge) -->
-
-<!-- ``` -->
+```
 
 
 <!-- <!-- ## Lasso --> -->
