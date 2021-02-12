@@ -99,7 +99,7 @@ print(data.frame(summary(lm_mod)$coef[summary(lm_mod)$coef[,4] <= .05, 4][1:4]))
 After we saw the results for the plain linear regression, we continue with the shrinkage methods. For comparison, ridge method and group lasso are both applied. 
     
 ## Ridge
-```{r ridge, eval = TRUE, echo = TRUE, fig.align="center", fig.cap="\\label{fig:ridge_coeff}Coefficient path along lambda variation"}
+```{r ridge, eval = TRUE, echo = TRUE}
 start <- glmnet(x = x_mod, y = y_mod, standardize=TRUE, alpha = 0)
 autolambda <- start$lambda
 newlambda <- c(autolambda, 10, 5, 3, 1, 0.5, 0.1) # add more to approach zero lambda
@@ -108,7 +108,10 @@ ridge_fit <- glmnet(x_mod, y_mod, standardize=TRUE, alpha = 0, lambda = newlambd
 cv.ridge <- cv.glmnet(x_mod, y_mod, standardize=TRUE, alpha = 0, lambda = newlambda)
 print(paste("The lamda giving the smallest CV error",cv.ridge$lambda.min))
 print(paste("The 1sd err method lambda",cv.ridge$lambda.1se))
+# par(fig = c(0.05, 0.45, 0, 1))
+par(mfrow = c(1, 2))
 plot(cv.ridge)
+# par(fig = c(0.5, 1, 0, 1), new = TRUE)
 plot(ridge_fit, xvar = "lambda", label = T) 
 abline(v = log(cv.ridge$lambda.1se))
 ```
@@ -117,8 +120,9 @@ abline(v = log(cv.ridge$lambda.1se))
 ## Lasso
 ```{r lasso, eval=TRUE, echo=FALSE}
 fit.lasso <- glmnet(x_mod, y_mod)
-plot(fit.lasso,xvar="lambda",label=TRUE)
 cv.lasso <- cv.glmnet(x_mod, y_mod)
+par(mfrow = c(1, 3))
+plot(fit.lasso,xvar="lambda",label=TRUE)
 plot(cv.lasso)
 plot(fit.lasso,xvar="lambda",label=TRUE);
 abline(v=log(cv.lasso$lambda.1se))
