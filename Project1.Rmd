@@ -200,8 +200,6 @@ grp_mod <- grplasso(x=x_mod_group, y = y_mod, index = index_mod, lambda = grp_la
 In the grouped lasso, the `bj` and `bez` are all shrinked or are all inclueded, respectively. This coincides better with our intuition, that this criterion is considered or not considered. Whereas in the regression and lasso before, just some years of construction and some areas where significant.
 
 
-.............. STILL TO DO BY FB!!!!!
-
 
 ```{r final, eval=TRUE, echo=FALSE}
 #CV for å finne optimal lambda? Bootstrapping? 
