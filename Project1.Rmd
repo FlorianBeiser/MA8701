@@ -53,15 +53,14 @@ In this project, we analyse a real dataset using shrinkage methods. For our proj
 and the response
 -   `nm`: rental price (double).
 
-```{r loadData,eval=TRUE,echo=FALSE, fig.width = 25, fig.align="center", fig.cap="\\label{fig:corrplot}Correlation between the covariates"}
+```{r loadData,eval=TRUE,echo=FALSE, fig.align="center", fig.cap="\\label{fig:corrplot}Correlation between the covariates"}
 # Load data set
 munich_house <- read.table(
   "https://data.ub.uni-muenchen.de/2/1/miete03.asc",
   sep="\t", header=TRUE)
 # Observe correlations between covariates
-# M <- cor(munich_house)
-ggpairs(munich_house, ggplot2::aes(color=as.factor(rooms)), #upper="blank",  
-        lower = list(continuous = wrap("points", alpha = 0.3, size=0.2)))
+# ggpairs(munich_house, ggplot2::aes(color=as.factor(rooms)), #upper="blank",  
+        # lower = list(continuous = wrap("points", alpha = 0.3, size=0.2)))
 xs=model.matrix(nm~.,data=munich_house)[,-1] # to take care of categorical variables, but not include the intercept column
 xss=scale(xs)
 corrplot(cor(xss),type="upper")
@@ -82,16 +81,15 @@ colnames(df_mod)[1]="nm"
 ```
 
 
-<!-- # Regression -->
+# Regression
 
-<!-- We start with a vanilla regression for reference. -->
-
-<!-- ```{r regression, eval=TRUE, echo=FALSE} -->
-<!-- # Vanilla regression model -->
-<!-- lm_mod <- lm(nm~.,data=df_mod)  -->
-<!-- #Printing the summary to assess significant parameters -->
-<!-- summary(lm_mod) -->
-<!-- ``` -->
+We start with a vanilla LM regression for reference.
+```{r regression, eval=TRUE, echo=FALSE}
+# Vanilla regression model
+lm_mod <- lm(nm~.,data=df_mod)
+#Printing the summary to assess significant parameters
+summary(lm_mod)
+```
 
 <!-- Clearly, the area `wfl` is stronly related to the rent price. Surprisingly in the regression, the significance of different `bj`s and `bez`s varies a lot.   -->
 
