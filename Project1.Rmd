@@ -100,12 +100,12 @@ After we saw the results for the plain linear regression, we continue with the s
     
 ## Ridge
 ```{r ridge, eval = TRUE, echo = TRUE, fig.align="center", fig.cap="\\label{fig:ridge_coeff}Coefficient path along lambda variation"}
-start <- glmnet(x = x_mod, y = y_mod, standardize=FALSE, alpha = 0)
+start <- glmnet(x = x_mod, y = y_mod, standardize=TRUE, alpha = 0)
 autolambda <- start$lambda
 newlambda <- c(autolambda, 10, 5, 3, 1, 0.5, 0.1) # add more to approach zero lambda
-ridge_fit <- glmnet(x_mod, y_mod, standardize=FALSE, alpha = 0, lambda = newlambda)
+ridge_fit <- glmnet(x_mod, y_mod, standardize=TRUE, alpha = 0, lambda = newlambda)
 # plot(ridge_fit, xvar = "lambda", label = T)
-cv.ridge <- cv.glmnet(x_mod, y_mod, standardize=FALSE, alpha = 0, lambda = newlambda)
+cv.ridge <- cv.glmnet(x_mod, y_mod, standardize=TRUE, alpha = 0, lambda = newlambda)
 print(paste("The lamda giving the smallest CV error",cv.ridge$lambda.min))
 print(paste("The 1sd err method lambda",cv.ridge$lambda.1se))
 plot(cv.ridge)
@@ -115,8 +115,15 @@ plot(ridge_fit, xvar = "lambda", label = T) + abline(v = log(cv.ridge$lambda.1se
 
 ## Lasso
 ```{r lasso, eval=TRUE, echo=FALSE}
-gen_mod <- glmnet(x=x_mod,y=y_mod,alpha=1,standardize=TRUE)
-gen_lambda_mod <- gen_mod$lambda
+fit.lasso <- glmnet(x_mod, y_mod)
+plot(fit.lasso,xvar="lambda",label=TRUE)
+cv.lasso <- cv.glmnet(x_mod, y_mod)
+plot(cv.lasso)
+plot(fit.lasso,xvar="lambda",label=TRUE);
+abline(v=log(cv.lasso$lambda.1se))
+
+# gen_mod <- glmnet(x=x_mod,y=y_mod,alpha=1,standardize=TRUE)
+# gen_lambda_mod <- gen_mod$lambda
 # plot(gen_lambda_mod)
 # plot(gen_mod) #plot against the L1 norm
 # plot(gen_mod,xvar="lambda",label=TRUE) + abline(v=log(gen_mod$lambda.1se)) #use 1sd error rule default
