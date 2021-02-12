@@ -100,15 +100,13 @@ After we saw the results for the plain linear regression, we continue with the s
     
 ## Ridge
 
-```{r ridge, eval = TRUE, echo = FALSE}
-x <- apply(munich_house[, -c(1, 2)], 2, scale) # standardize input
-y <- munich_house[, 1] - mean(munich_house[, 1]) # centralize output to remove intercept
-start <- glmnet(x = x, y = y, alpha = 0)
+```{r ridge, eval = TRUE, echo = TRUE}
+start <- glmnet(x = x_mod, y = y_mod, standardize=TRUE, alpha = 0)
 autolambda <- start$lambda
 newlambda <- c(autolambda, 10, 5, 3, 1, 0.5, 0.1) # add more to approach zero lambda
-ridge_fit <- glmnet(x, y, alpha = 0, lambda = newlambda)
+ridge_fit <- glmnet(x_mod, y_mod, standardize=TRUE, alpha = 0, lambda = newlambda)
 # plot(ridge_fit, xvar = "lambda", label = T)
-cv.ridge <- cv.glmnet(x, y, alpha = 0, lambda = newlambda)
+cv.ridge <- cv.glmnet(x_mod, y_mod, standardize=TRUE, alpha = 0, lambda = newlambda)
 # print(paste("The lamda giving the smallest CV error",cv.ridge$lambda.min))
 # print(paste("The 1sd err method lambda",cv.ridge$lambda.1se))
 # plot(cv.ridge)
