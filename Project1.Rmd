@@ -33,7 +33,7 @@ library(leaps)
 library(gglasso)
 library(HDCI)
 ```
-
+---
 # The Data Set 
 
 In this project, we analyse a real dataset using shrinkage methods. For our project work we use the Munich Rent 2003 data set as described in https://rdrr.io/cran/LinRegInteractive/man/munichrent03.html. The data set has 12 covariates, of which many are suffering multicollinearity, a brief introduction to these parameters are listed below:
@@ -80,7 +80,7 @@ df_mod <- data.frame(y_mod,x_mod)
 colnames(df_mod)[1]="nm"
 ```
 
-
+---
 # Regression
 
 We start with a vanilla LM regression for reference. Only significant coeffcients are printed. Clearly, the area `wfl` is strongly related to the rent price. Surprisingly in the regression, the significance of different `bj`s and `bez`s varies a lot.
@@ -93,11 +93,11 @@ print(data.frame(summary(lm_mod)$coef[summary(lm_mod)$coef[,4] <= .05, 4][1:4]))
 # print(data.frame(summary(lm_mod)$coef))
 ```
 
-
+---
 # Shrinkage
 
 After we saw the results for the plain linear regression, we continue with the shrinkage methods. For comparison, ridge method and group lasso are both applied. 
-    
+---  
 ## Ridge
 ```{r ridge, eval = TRUE, echo = TRUE, fig.height=5, fig.width=15}
 start <- glmnet(x = x_mod, y = y_mod, standardize=TRUE, alpha = 0)
@@ -114,7 +114,7 @@ plot(ridge_fit, xvar = "lambda", label = T)
 abline(v = log(cv.ridge$lambda.1se))
 ```
 
-
+---
 ## Lasso
 ```{r lasso, eval=TRUE, echo=T, fig.height=5, fig.width=15}
 fit.lasso <- glmnet(x_mod, y_mod)
@@ -131,10 +131,10 @@ abline(v=log(cv.lasso$lambda.1se))
 For the $\lambda$ with one standard deviation, we observe that many of the `bj`s and `bez`s get shrinked, but not all of them - and the values differ from the linear regression. Whereas the other kept covariants roughly keep their parameter.
 
 Above we considered a fixed $\lambda$, now we analyse which $\lambda$ is optimal using cross validation.
-
+---
 ## Group lasso
 
-```{r groupLasso, eval=TRUE, echo=FALSE}
+```{r groupLasso, eval=TRUE, echo=FALSE, fig.align="center", fig.height=8, fig.width=8}
 # Adding an intercept to the design matrix
 # NB! In contrast to glm_net the grplasso package requires the intercept
 x_mod_group <- cbind(1, x_mod)
@@ -158,37 +158,85 @@ grp_mod <- grplasso(x=x_mod_group, y = y_mod, index = index_mod, lambda = grp_la
                     control = grpl.control(update.hess = "lambda", trace = 0))
 
 ## Plot coefficient paths
+par(mfrow=c(1,1))
 plot(grp_mod)
-# str(grp_mod)
-# coef(grp_mod)
-
 ```
 
 In the grouped lasso, the `bj` and `bez` are all shrinked or are all inclueded, respectively. This coincides better with our intuition, that this criterion is considered or not considered. Whereas in the regression and lasso before, just some years of construction and some areas where significant.
 
-```{r final, eval=TRUE, echo=FALSE}
+```{r final, eval=TRUE, echo=FALSE, fig.height=5, fig.width=15}
 #package chosen lambdagrid
 fitls_mod <- gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls")
-# plot(fitls_mod)
 #own defined lambdagrid
 fitls_mod <- gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=grp_lambda_mod)
-# plot(fitls_mod)
 #crossvalidation on self defined lambdagrid - this takes some time
 cvfitls_mod <- cv.gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=grp_lambda_mod)
-# plot(cvfitls_mod)
 # str(cvfitls_mod)
 cvfitls_mod$lambda.1se
 #fit with optimal lambda on defined lambda grid(either package made or made by me)
 fin_mod=gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=cvfitls_mod$lambda.1se)
 # coef(fin_mod)
+par(mfrow=c(1,3), mar=c(4,4,4,1), oma=c(0.5,0.5,0.5,0))
+plot(fitls_mod)
+plot(fitls_mod)
+plot(cvfitls_mod)
 #testing with a fixed lambda
 test_mod=gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=5)
 # coef(test_mod)
 #final results, group lasso either shrinks all or nothing and even increases some estimated parameter coefficients, what do we take away from this?
-results_mod=cbind(coef(fin_mod),coef(gen_mod,s=cv_gen_mod$lambda.1se),coef(lm_mod))
-colnames(results_mod)=c("group lasso","general lasso","vanilla LS")
-# print(results_mod)
+results_mod=cbind(coef(lm_mod), coef(ridge_fit,s=cv.ridge$lambda.1se), coef(fit.lasso,s=cv.lasso$lambda.1se), coef(fin_mod))
+colnames(results_mod)=c("vanilla LS", "ridge", "general lasso", "group lasso")
+print(results_mod)
 ```
+
+---
+#Bootstrap validation
+
+```{r,eval=T, tidy = F, fig.width=15, fig.height=5}
+# boostrap loop
+set.seed(2021)
+B=10
+n=nrow(x_mod)
+p=ncol(x_mod)
+lassomat=matrix(ncol=p+1,nrow=B)
+ridgemat=matrix(ncol=p+1,nrow=B)
+
+# no need or separate function for steps 1-6 since can use cv.glmnet
+# and weight argument for giving the new bootstrapped data
+for (b in 1:B)
+{
+  ids=sort(sample(1:n,replace=TRUE))
+  wids=rep(0,n)
+  for (i in 1:n)
+    wids[i]=sum(ids==i)
+  resl=cv.glmnet(x_mod,y_mod,weights=wids)
+  resr=cv.glmnet(x_mod,y_mod,weights=wids,alpha=0)
+  lassomat[b,]=as.vector(coef(resl)) #automatic lambda 1sd
+  ridgemat[b,]=as.vector(coef(resr)) #automatic lambda 1sd
+}
+colnames(lassomat)=colnames(ridgemat)=c("Int.cept",colnames(x_mod))
+# plotting boxplots
+lassomatUI=lassomat[,-1]
+lassods=reshape2::melt(lassomatUI,
+         variable.name ="variable",value.name="value")
+lassopp=ggplot(lassods,aes(x=Var2,y=value))+
+  geom_boxplot()+
+  ggtitle("Boxplots for boostrapped lasso for diabetes data")
+# lassopp
+
+ridgematUI=ridgemat[,-1]
+ridgeds=reshape2::melt(ridgematUI,variable.name="variable",value.name="value")
+ridgepp=ggplot(ridgeds,aes(x=Var2,y=value))+
+  geom_boxplot()+
+  ggtitle("Boxplots for boostrapped ridge for diabetes data")
+# ridgepp
+
+lasso0perc=apply(abs(lassomat)<.Machine$double.eps,2,mean)
+par(mfrow = c(1, 1))
+barplot(lasso0perc)
+```
+
+
 
 
 
