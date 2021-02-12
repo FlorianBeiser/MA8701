@@ -88,15 +88,16 @@ We start with a vanilla LM regression for reference.
 # Vanilla regression model
 lm_mod <- lm(nm~.,data=df_mod)
 #Printing the summary to assess significant parameters
-summary(lm_mod)
+# summary(lm_mod)
+print(data.frame(summary(lm_mod)$coef[summary(lm_mod)$coef[,4] <= .05, 4][1:4]))
 ```
 
-<!-- Clearly, the area `wfl` is stronly related to the rent price. Surprisingly in the regression, the significance of different `bj`s and `bez`s varies a lot.   -->
+Clearly, the area `wfl` is strongly related to the rent price. Surprisingly in the regression, the significance of different `bj`s and `bez`s varies a lot.
 
 
-<!-- # Shrinkage -->
+# Shrinkage
 
-<!-- After we saw the results for the plain linear regression, we continue with the shrinkage methods. -->
+After we saw the results for the plain linear regression, we continue with the shrinkage methods.
 
 <!-- <!-- <!-- ## Subset selection --> --> -->
 
