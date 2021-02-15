@@ -12,11 +12,13 @@ library(grplasso)
 munich_house <- read.table(
   "https://data.ub.uni-muenchen.de/2/1/miete03.asc",
   sep="\t", header=TRUE)
-#ggpairs(munich_house) No serious signs of multicolinearity
+#ggpairs(munich_house) #No serious signs of multicolinearity
+
 
 munich_house$bez=as.factor(munich_house$bez)
 munich_house$bj=as.factor(munich_house$bj)
 str(munich_house)
+
 
 #create model matrix without intercept and nmqm
 x_mod <- model.matrix(nm~.-nmqm,data=munich_house)[,-1]
@@ -56,7 +58,7 @@ print(results_mod)
 
 #### Group Lasso
 
-#Adding an intercept to the design matrix
+#Adding an intercept to the design matrix, because of package now used
 x_mod_group <- cbind(1, x_mod)
 colnames(x_mod_group)[1] <- c("Intercept")
 df_mod_group <- data.frame(y_mod,x_mod_group)
@@ -91,7 +93,7 @@ plot(grp_mod)
 str(grp_mod)
 coef(grp_mod) #s=cv.lasso.group.test$lambda.1se)#[,1]
 
-#CV for å finne optimal lambda? Bootstrapping? 
+#CV to find optimal lambda
 library(gglasso)
 #package chosen lambdagrid
 fitls_mod <- gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls")
@@ -100,19 +102,26 @@ plot(fitls_mod)
 fitls_mod <- gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=grp_lambda_mod)
 plot(fitls_mod)
 
+
 #crossvalidation on self defined lambdagrid - this takes some time
 cvfitls_mod <- cv.gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=grp_lambda_mod)
 plot(cvfitls_mod)
 str(cvfitls_mod)
 cvfitls_mod$lambda.1se
 
+#plot(grp_mod,xvar="lambda",label=TRUE)
+plot(fitls_mod)
+abline(v=(cvfitls_mod$lambda.1se))
+
+
 #fit with optimal lambda on defined lambda grid(either package made or made by me)
-fin_mod=gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=cvfitls_mod$lambda.1se)
+fin_mod=gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=exp(cvfitls_mod$lambda.1se))
 coef(fin_mod)
 
+
 #testing with a fixed lambda
-test_mod=gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=5)
-coef(test_mod)
+#test_mod=gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=5)
+#coef(test_mod)
 
 #final results, group lasso either shrinks all or nothing and even increases some estimated parameter coefficients, what do we take away from this? 
 results_mod=cbind(coef(fin_mod),coef(gen_mod,s=cv_gen_mod$lambda.1se),coef(lm_mod))
