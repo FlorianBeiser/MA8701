@@ -47,3 +47,7 @@ vignettes/*.pdf
 # use `git add -f ***.pdf`
 *.pdf
 *.html
+
+# Yaolins local files
+run.sh
+.DS_Store
