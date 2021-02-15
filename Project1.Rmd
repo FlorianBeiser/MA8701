@@ -254,7 +254,7 @@ In this project, we have chosen a practical data set which contains data on rent
 
 The data set is too small to divide it into a training and a test set. 
 
-Bootstrap can be applied here to find the proportion of times each element in the coefficients vector of being zero. So it is a way of validation. 
+Bootstrap can be applied here to find the proportion of times each element in the coefficients vector of being zero. So it is a way of validation. By looking at the barplot which shows how many percentages of that variable of being zero, one can tell that the majority of the coefficients for those year covariates are zero while the rest of the dominating factors are non zero which reflects their significance as well.
 
 ```{r,echo = F, eval=T, tidy = F, fig.width=15, fig.height=5}
 # boostrap loop
