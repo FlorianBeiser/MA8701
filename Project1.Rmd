@@ -256,7 +256,7 @@ The data set is too small to divide it into a training and a test set.
 
 Bootstrap can be applied here to find the proportion of times each element in the coefficients vector of being zero. So it is a way of validation. 
 
-```{r,eval=T, tidy = F, include = F, fig.width=15, fig.height=5}
+```{r,echo = F, eval=T, tidy = F, fig.width=15, fig.height=5}
 # boostrap loop
 set.seed(2021)
 B=100
@@ -286,19 +286,12 @@ lassods=reshape2::melt(lassomatUI,
 lassopp=ggplot(lassods,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("Boxplots for boostrapped lasso for diabetes data")
 # lassopp
-
 ridgematUI=ridgemat[,-1]
 ridgeds=reshape2::melt(ridgematUI,variable.name="variable",value.name="value")
 ridgepp=ggplot(ridgeds,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("Boxplots for boostrapped ridge for diabetes data")
 # ridgepp
-
 lasso0perc=apply(abs(lassomat)<.Machine$double.eps,2,mean)
 par(mfrow = c(1, 1))
 barplot(lasso0perc)
 ```
-
-
-
-
-
