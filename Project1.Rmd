@@ -256,6 +256,8 @@ The data set is too small to divide it into a training and a test set.
 
 Bootstrap can be applied here to find the proportion of times each element in the coefficients vector of being zero. So it is a way of validation. By looking at the barplot which shows how many percentages of that variable of being zero, one can tell that the majority of the coefficients for those year covariates are zero while the rest of the dominating factors are non zero which reflects their significance as well.
 
+So to conclude, one can tell group lasso seems working suitably for this specific case where its categorical covariates have many groups. Ridge regression does not shrink any parameters dramatically while lasso does a bit on the shrinkage, but the most shrinked contributation is from group lasso.
+
 ```{r,echo = F, eval=T, tidy = F, fig.width=15, fig.height=5}
 # boostrap loop
 set.seed(2021)
@@ -279,19 +281,23 @@ for (b in 1:B)
   ridgemat[b,]=as.vector(coef(resr)) #automatic lambda 1sd
 }
 colnames(lassomat)=colnames(ridgemat)=c("Int.cept",colnames(x_mod))
+
 # plotting boxplots
 lassomatUI=lassomat[,-1]
 lassods=reshape2::melt(lassomatUI,
          variable.name ="variable",value.name="value")
+# par(mfrow = c(1, 1))
 lassopp=ggplot(lassods,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("Boxplots for boostrapped lasso for diabetes data")
 # lassopp
+
 ridgematUI=ridgemat[,-1]
 ridgeds=reshape2::melt(ridgematUI,variable.name="variable",value.name="value")
 ridgepp=ggplot(ridgeds,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("Boxplots for boostrapped ridge for diabetes data")
 # ridgepp
+
 lasso0perc=apply(abs(lassomat)<.Machine$double.eps,2,mean)
-par(mfrow = c(1, 1))
-barplot(lasso0perc)
+# par(mfrow = c(1, 1))
+# barplot(lasso0perc)
 ```
