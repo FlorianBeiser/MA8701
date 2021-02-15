@@ -267,6 +267,7 @@ n=nrow(x_mod)
 p=ncol(x_mod)
 lassomat=matrix(ncol=p+1,nrow=B)
 ridgemat=matrix(ncol=p+1,nrow=B)
+grplassomat=matrix(ncol=p+1,nrow=B)
 
 # no need or separate function for steps 1-6 since can use cv.glmnet
 # and weight argument for giving the new bootstrapped data
@@ -278,27 +279,41 @@ for (b in 1:B)
     wids[i]=sum(ids==i)
   resl=cv.glmnet(x_mod,y_mod,weights=wids)
   resr=cv.glmnet(x_mod,y_mod,weights=wids,alpha=0)
-  lassomat[b,]=as.vector(coef(resl)) #automatic lambda 1sd
-  ridgemat[b,]=as.vector(coef(resr)) #automatic lambda 1sd
+  regrp=gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "ls",lambda=exp(cvfitls_mod$lambda.1se))
+  lassomat[b,]=as.vector(coef(resl)) 
+  ridgemat[b,]=as.vector(coef(resr)) 
+  grplassomat[b,]=as.vector(coef(regrp))
 }
-colnames(lassomat)=colnames(ridgemat)=c("Int.cept",colnames(x_mod))
+colnames(grplassomat)=colnames(ridgemat)=c("Int.cept",colnames(x_mod))
 
 # plotting boxplots
 lassomatUI=lassomat[,-1]
 lassods=reshape2::melt(lassomatUI,
          variable.name ="variable",value.name="value")
 # par(mfrow = c(1, 1))
-lassopp=ggplot2(lassods,aes(x=Var2,y=value))+
+lassopp=ggplot(lassods,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("Boxplots for boostrapped lasso for diabetes data")
+# print(lassopp)
+# lassopp
+
+grplassomatUI=grplassomat[,-1]
+grplassods=reshape2::melt(grplassomatUI,
+         variable.name ="variable",value.name="value")
+# par(mfrow = c(1, 1))
+grplassopp=ggplot(grplassods,aes(x=Var2,y=value))+
+  geom_boxplot()+ggtitle("Boxplots for boostrapped group lasso for diabetes data")
+print(grplassopp)
 # lassopp
 
 ridgematUI=ridgemat[,-1]
 ridgeds=reshape2::melt(ridgematUI,variable.name="variable",value.name="value")
-ridgepp=ggplot2(ridgeds,aes(x=Var2,y=value))+
+ridgepp=ggplot(ridgeds,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("Boxplots for boostrapped ridge for diabetes data")
+# print(ridgepp)
 # ridgepp
 
-lasso0perc=apply(abs(lassomat)<.Machine$double.eps,2,mean)
-# par(mfrow = c(1, 1))
-# barplot(lasso0perc)
+# lasso0perc=apply(abs(lassomat)<.Machine$double.eps,2,mean)
+grplasso0perc=apply(abs(grplassomat)<.Machine$double.eps,2,mean)
+par(mfrow = c(1, 1))
+barplot(grplasso0perc)
 ```
