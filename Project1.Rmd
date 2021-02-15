@@ -258,8 +258,8 @@ Bootstrap can be applied here to find the proportion of times each element in th
 
 So to conclude, one can tell group lasso seems working suitably for this specific case where its categorical covariates have many groups. Ridge regression does not shrink any parameters dramatically while lasso does a bit on the shrinkage, but the most shrinked contributation is from group lasso.
 
-```{r,echo = F, eval=T, tidy = F}
-# ```{r,echo = F, eval=T, tidy = F, fig.width=15, fig.height=5}
+```{r,echo = F, eval=T, tidy = F, fig.width=20, fig.height=10}
+# ```{r,echo = F, eval=T, tidy = F}
 # boostrap loop
 set.seed(2021)
 B=100
@@ -302,6 +302,7 @@ grplassods=reshape2::melt(grplassomatUI,
 # par(mfrow = c(1, 1))
 grplassopp=ggplot(grplassods,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("Boxplots for boostrapped group lasso for diabetes data")
+# par(mfrow = c(2, 1))
 print(grplassopp)
 # lassopp
 
@@ -314,6 +315,5 @@ ridgepp=ggplot(ridgeds,aes(x=Var2,y=value))+
 
 # lasso0perc=apply(abs(lassomat)<.Machine$double.eps,2,mean)
 grplasso0perc=apply(abs(grplassomat)<.Machine$double.eps,2,mean)
-par(mfrow = c(1, 1))
 barplot(grplasso0perc)
 ```
