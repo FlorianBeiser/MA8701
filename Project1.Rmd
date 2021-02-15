@@ -1,9 +1,11 @@
 ---
-subtitle: "MA8701"
 title: "Data Analysis Project 1"
-author: "Group 5 : Yellow Submarine"
+author: 'Group 5 : Yellow Submarine'
 date: "`r format(Sys.time(), '15 February, 2021')`"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
+subtitle: MA8701
 ---
   
 ```{r setup, include=FALSE}
@@ -60,7 +62,7 @@ munich_house$bj=as.factor(munich_house$bj)
 str(munich_house)
 ```
 
-Since the price per square meter `nmqm` together with the area `wfl` directly give the response in the system, we exclude `nmqm` from the data frame to be able to do serious data analysis on the dataset. (@HMO check: should we mention something about unclear signs of multicolinearity) The factorial variable `bj` and `bez` introduce 44 and 25 levels, respectively, leading to relatively unclear dependencies between the full covariate set (with factorial variables) and the response, which makes this dataset suitable for a regression analysis and the application of shrinkage methods. 
+Since the price per square meter `nmqm` multiplied with the area `wfl` directly gives the rental price which the response in the system, it does not make sense to keep both values. Hence, we exclude `nmqm` from the data frame to be able to do serious data analysis on the dataset. The factorial variable `bj` and `bez` introduce 44 and 25 levels, respectively, leading to relatively unclear dependencies between the full covariate set (with factorial variables) and the response, which makes this dataset suitable for a regression analysis and the application of shrinkage methods. 
 
 ```{r buildDataFrame, eval=TRUE, include=FALSE} 
 #create model matrix without intercept and without nmqm
@@ -73,7 +75,7 @@ colnames(df_mod)[1]="nm"
 
 # Data Analysis
 
-Subsequently, we start with a plain linear regression model as reference such that we can particularly point out the benefits of shrinkage approaches. As shrinkage methods, we employ the lasso and the group lasso.
+Subsequently, we start with a plain linear regression model as reference such that we can particularly point out the benefits of shrinkage approaches. As shrinkage methods, we employ the ridge, the lasso and the group lasso. The latter approach seems to be very well suited for our data set, as it allows to take the factorial variables as a single unit for shrinkage. 
 
 
 ## Regression
