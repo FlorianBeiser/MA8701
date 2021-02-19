@@ -8,3 +8,4 @@ FB: Can this algorithm handle newly-incoming training data or has it to run from
 
 
 YL: why does the method still work if there is ground truth for validation.
+YL: Can you elaborate more on how this method enables to gain new knowledge about the interactions between factors (hyperparameters)?
