@@ -3,3 +3,8 @@
 FB: What are the relative computation times for 1) to 6) in the hyperparameter tuning algorithm?
 FB: Can this algorithm handle newly-incoming training data or has it to run from beginning again?
 
+
+
+
+
+YL: why does the method still work if there is ground truth for validation.
