@@ -262,11 +262,11 @@ In this project, we have chosen a practical data set which contains data on rent
 
 The data set is too small to divide it into a training and a test set. 
 
-Bootstrap can be applied here to find the proportion of times each element in the coefficients vector of being zero. So it is a way of validation. By looking at the boxplot and barplot which show how many percentages of that variable of being zero, one can tell that the majority of the coefficients for those year covariates are zero while the rest of the dominating factors are non zero which reflects their significance as well.
+Bootstrap can be applied here to find the proportion of times each element in the coefficients vector of being zero. So it is a way of validation. By looking at the boxplot and barplot which show how many percentages of that variable of being zero, one can tell that the majority of the coefficients for those year covariates are zero while the rest of the dominating factors are non zero which reflects their significance as well. 
 
 So to conclude, one can tell group lasso seems working suitably for this specific case where its categorical covariates have many groups. Ridge regression does not shrink any parameters dramatically while lasso does a bit on the shrinkage, but the most shrinked contributation is from group lasso.
 
-```{r,echo = F, eval=T, tidy = F, fig.width=20, fig.height=10}
+```{r,echo = F, eval=T, tidy = F, fig.width=20, fig.height=8}
 # ```{r,echo = F, eval=T, tidy = F}
 # boostrap loop
 set.seed(2021)
@@ -302,7 +302,7 @@ lassods=reshape2::melt(lassomatUI,
 # par(mfrow = c(1, 1))
 lassopp=ggplot(lassods,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("")
-print(lassopp)
+# print(lassopp)
 # lassopp
 
 grplassomatUI=grplassomat[,-1]
@@ -322,7 +322,13 @@ ridgepp=ggplot(ridgeds,aes(x=Var2,y=value))+
 # print(ridgepp)
 # ridgepp
 
-lasso0perc=apply(abs(lassomat)<.Machine$double.eps,2,mean)
+lasso0perc=apply(abs(lassomat[,-1])<.Machine$double.eps,2,mean)
+lassods=reshape2::melt(lassomatUI,
+         variable.name ="variable",value.name="value")
+# par(mfrow = c(1, 1))
+lassopp=ggplot(lassods,aes(x=Var2,y=value))+
+  geom_boxplot()+ggtitle("")
+print(lassopp)
 # grplasso0perc=apply(abs(grplassomat)<.Machine$double.eps,2,mean)
 barplot(lasso0perc)
 # barplot(grplasso0perc)
