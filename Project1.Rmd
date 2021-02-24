@@ -27,6 +27,7 @@ To pursue the idea of reproducible research, the chosen dataset as well as the c
 #load packages
 library(GGally)
 library(tidyverse)
+library(corrplot)
 ```
 
 
@@ -57,11 +58,16 @@ munich_house <- read.table(
   "https://data.ub.uni-muenchen.de/2/1/miete03.asc",
   sep="\t", header=TRUE)
 
+# Correlation plot with excluding nmqm, so to find the colinearlity
+# Observe correlations between covariates
+xs=model.matrix(nm~.,data=munich_house)[,-c(1:2)] # to take care of categorical variables, but not include the intercept column
+xss=scale(xs)
+corrplot(cor(xss),type="upper")
+
 munich_house$bez=as.factor(munich_house$bez)
 munich_house$bj=as.factor(munich_house$bj)
 str(munich_house)
 
-# Correlation plot with excluding nmc, so to find the colinearlity
 ```
 
 Since the price per square meter `nmqm` multiplied with the area `wfl` directly gives the rental price which the response in the system, it does not make sense to keep both values. Hence, we exclude `nmqm` from the data frame to be able to do serious data analysis on the dataset. The factorial variable `bj` and `bez` introduce 44 and 25 levels, respectively, leading to relatively unclear dependencies between the full covariate set (with factorial variables) and the response, which makes this dataset suitable for a regression analysis and the application of shrinkage methods. 
@@ -128,6 +134,8 @@ abline(v = log(cv_ridge$lambda.1se))
 # Plot for report
 plot(ridge_fit, xvar = "lambda", label = T) 
 abline(v = log(cv_ridge$lambda.1se))
+
+# add cross validation plot 
 ```
 
 In Figure \ref{fig:ridge}, the coefficients for the individual covariates are depicted agains $\log\lambda$, where the optimal $\lambda$ choice is highlighted. As typical for ridge, the coefficients are shrinked towards 0, but all parameters remain positive weights. This makes the outcome still hard to interpret for our practical data set at hand.
@@ -258,7 +266,7 @@ Bootstrap can be applied here to find the proportion of times each element in th
 
 So to conclude, one can tell group lasso seems working suitably for this specific case where its categorical covariates have many groups. Ridge regression does not shrink any parameters dramatically while lasso does a bit on the shrinkage, but the most shrinked contributation is from group lasso.
 
-```{r,echo = F, eval=T, tidy = F, fig.width=20, fig.height=5}
+```{r,echo = F, eval=T, tidy = F, fig.width=20, fig.height=50}
 # ```{r,echo = F, eval=T, tidy = F}
 # boostrap loop
 set.seed(2021)
@@ -292,7 +300,7 @@ lassods=reshape2::melt(lassomatUI,
          variable.name ="variable",value.name="value")
 # par(mfrow = c(1, 1))
 lassopp=ggplot(lassods,aes(x=Var2,y=value))+
-  geom_boxplot()+ggtitle("Boxplots for boostrapped lasso for diabetes data")
+  geom_boxplot()+ggtitle("")
 # print(lassopp)
 # lassopp
 
@@ -301,7 +309,7 @@ grplassods=reshape2::melt(grplassomatUI,
          variable.name ="variable",value.name="value")
 # par(mfrow = c(1, 1))
 grplassopp=ggplot(grplassods,aes(x=Var2,y=value))+
-  geom_boxplot()+ggtitle("Boxplots for boostrapped group lasso for diabetes data")
+  geom_boxplot()+ggtitle("")
 # par(mfrow = c(2, 1))
 print(grplassopp)
 # lassopp
@@ -309,7 +317,7 @@ print(grplassopp)
 ridgematUI=ridgemat[,-1]
 ridgeds=reshape2::melt(ridgematUI,variable.name="variable",value.name="value")
 ridgepp=ggplot(ridgeds,aes(x=Var2,y=value))+
-  geom_boxplot()+ggtitle("Boxplots for boostrapped ridge for diabetes data")
+  geom_boxplot()+ggtitle("")
 # print(ridgepp)
 # ridgepp
 
@@ -317,3 +325,4 @@ ridgepp=ggplot(ridgeds,aes(x=Var2,y=value))+
 grplasso0perc=apply(abs(grplassomat)<.Machine$double.eps,2,mean)
 barplot(grplasso0perc)
 ```
+
