@@ -50,7 +50,7 @@ For our project work we use the Munich Rent 2003 data set as described in https:
 and the response
 -   `nm`: rental price (double).
 
-"Double" naturally stands for numerical values, "int" categories parameters with integer values, and "Factor" symbolize parameter taking a certain number of levels.
+"Double" naturally stands for numerical values, "int" categories parameters with integer values, and "Factor" symbolize parameter taking a certain number of levels. The corrplot shows the correlation among the covariates, since `nqnm` has the same effect as `nm`. Therefore, it is excluded from the covariates list for plotting the correlations.
 
 ```{r loadData, eval=TRUE, include=FALSE}
 # Load data set
