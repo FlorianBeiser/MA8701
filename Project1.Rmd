@@ -60,6 +60,8 @@ munich_house <- read.table(
 munich_house$bez=as.factor(munich_house$bez)
 munich_house$bj=as.factor(munich_house$bj)
 str(munich_house)
+
+# Correlation plot with excluding nmc, so to find the colinearlity
 ```
 
 Since the price per square meter `nmqm` multiplied with the area `wfl` directly gives the rental price which the response in the system, it does not make sense to keep both values. Hence, we exclude `nmqm` from the data frame to be able to do serious data analysis on the dataset. The factorial variable `bj` and `bez` introduce 44 and 25 levels, respectively, leading to relatively unclear dependencies between the full covariate set (with factorial variables) and the response, which makes this dataset suitable for a regression analysis and the application of shrinkage methods. 
