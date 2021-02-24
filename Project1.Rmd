@@ -50,7 +50,7 @@ For our project work we use the Munich Rent 2003 data set as described in https:
 and the response
 -   `nm`: rental price (double).
 
-"Double" naturally stands for numerical values, "int" categories parameters with integer values, and "Factor" symbolize parameter taking a certain number of levels. The corrplot shows the correlation among the covariates, since `nqnm` has the same effect as `nm`. Therefore, it is excluded from the covariates list for plotting the correlations.
+"Double" naturally stands for numerical values, "int" categories parameters with integer values, and "Factor" symbolize parameter taking a certain number of levels. The corrplot shows the correlation among the covariates, since `nqnm` has the same effect as `nm`. Therefore, it is excluded from the covariates list for plotting the correlations. It seems that the dataset is suffering a little of the multi-collinearity.
 
 ```{r loadData, eval=TRUE, include=FALSE}
 # Load data set
@@ -62,7 +62,7 @@ munich_house <- read.table(
 # Observe correlations between covariates
 xs=model.matrix(nm~.,data=munich_house)[,-c(1:2)] # to take care of categorical variables, but not include the intercept column
 xss=scale(xs)
-corrplot(cor(xss),type="upper")
+corrplot.mixed(cor(xss),upper = "ellipse", lower = "number", tl.cex = 0.5)
 
 munich_house$bez=as.factor(munich_house$bez)
 munich_house$bj=as.factor(munich_house$bj)
@@ -266,7 +266,7 @@ Bootstrap can be applied here to find the proportion of times each element in th
 
 So to conclude, one can tell group lasso seems working suitably for this specific case where its categorical covariates have many groups. Ridge regression does not shrink any parameters dramatically while lasso does a bit on the shrinkage, but the most shrinked contributation is from group lasso.
 
-```{r,echo = F, eval=T, tidy = F, fig.width=20, fig.height=50}
+```{r,echo = F, eval=T, tidy = F, fig.width=20, fig.height=5}
 # ```{r,echo = F, eval=T, tidy = F}
 # boostrap loop
 set.seed(2021)
@@ -293,6 +293,7 @@ for (b in 1:B)
   grplassomat[b,]=as.vector(coef(regrp))
 }
 colnames(grplassomat)=colnames(ridgemat)=c("Int.cept",colnames(x_mod))
+colnames(lassomat)=colnames(ridgemat)=c("Int.cept",colnames(x_mod))
 
 # plotting boxplots
 lassomatUI=lassomat[,-1]
@@ -301,7 +302,7 @@ lassods=reshape2::melt(lassomatUI,
 # par(mfrow = c(1, 1))
 lassopp=ggplot(lassods,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("")
-# print(lassopp)
+print(lassopp)
 # lassopp
 
 grplassomatUI=grplassomat[,-1]
@@ -311,7 +312,7 @@ grplassods=reshape2::melt(grplassomatUI,
 grplassopp=ggplot(grplassods,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("")
 # par(mfrow = c(2, 1))
-print(grplassopp)
+# print(grplassopp)
 # lassopp
 
 ridgematUI=ridgemat[,-1]
@@ -321,8 +322,15 @@ ridgepp=ggplot(ridgeds,aes(x=Var2,y=value))+
 # print(ridgepp)
 # ridgepp
 
-# lasso0perc=apply(abs(lassomat)<.Machine$double.eps,2,mean)
-grplasso0perc=apply(abs(grplassomat)<.Machine$double.eps,2,mean)
+lasso0perc=apply(abs(lassomat)<.Machine$double.eps,2,mean)
+# grplasso0perc=apply(abs(grplassomat)<.Machine$double.eps,2,mean)
 barplot(grplasso0perc)
 ```
+
+
+
+
+
+
+
 
