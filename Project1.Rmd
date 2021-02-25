@@ -47,10 +47,12 @@ For our project work we use the Munich Rent 2003 data set as described in https:
 -   `badkach0`: tiled bathroom (int)
 -   `badextra`: high-quality bathroom (int)
 -   `kueche`: upscale kitchen equipment (int)
+
 and the response
+
 -   `nm`: rental price (double).
 
-"Double" naturally stands for numerical values, "int" categories parameters with integer values, and "Factor" symbolize parameter taking a certain number of levels. The corrplot shows the correlation among the covariates, since `nqnm` has the same effect as `nm`. Therefore, it is excluded from the covariates list for plotting the correlations. It seems that the dataset is suffering a little of the multi-collinearity.
+The label "double" naturally stands for numerical values, "int" categories parameters with integer values, and "Factor" symbolize parameter taking a certain number of levels. 
 
 ```{r loadData, eval=TRUE, include=FALSE}
 # Load data set
@@ -58,21 +60,29 @@ munich_house <- read.table(
   "https://data.ub.uni-muenchen.de/2/1/miete03.asc",
   sep="\t", header=TRUE)
 
+```
+
+Since the price per square meter `nmqm` multiplied with the area `wfl` directly gives the rental price which the response in the system, it does not make sense to keep both values. Hence, we exclude `nmqm` from the data frame to be able to do serious data analysis on the dataset. 
+
+
+```{r dataPlot, echo=FALSE, fig.cap="\\label{fig:data}Exploration of multi-colinearity in the data set"} 
 # Correlation plot with excluding nmqm, so to find the colinearlity
 # Observe correlations between covariates
-xs=model.matrix(nm~.,data=munich_house)[,-c(1:2)] # to take care of categorical variables, but not include the intercept column
+xs=model.matrix(nm~.-bj -bez,data=munich_house)[,-c(1:2)] # to take care of categorical variables, but not include the intercept column
 xss=scale(xs)
 corrplot.mixed(cor(xss),upper = "ellipse", lower = "number", tl.cex = 0.5)
 
+```
+Figure \ref{fig:data} shows the correlation between covariates ignoring the factorials and reveals that the dataset may suffer from a very light multi-colinearity. 
+
+However, the factorial variable `bj` and `bez` introduce 44 and 25 levels, respectively, leading to relatively unclear dependencies between the full covariate set (with factorial variables) and the response, which makes this dataset suitable for a regression analysis and the application of shrinkage methods. 
+
+```{r buildDataFrame, eval=TRUE, include=FALSE} 
+# 
 munich_house$bez=as.factor(munich_house$bez)
 munich_house$bj=as.factor(munich_house$bj)
 str(munich_house)
 
-```
-
-Since the price per square meter `nmqm` multiplied with the area `wfl` directly gives the rental price which the response in the system, it does not make sense to keep both values. Hence, we exclude `nmqm` from the data frame to be able to do serious data analysis on the dataset. The factorial variable `bj` and `bez` introduce 44 and 25 levels, respectively, leading to relatively unclear dependencies between the full covariate set (with factorial variables) and the response, which makes this dataset suitable for a regression analysis and the application of shrinkage methods. 
-
-```{r buildDataFrame, eval=TRUE, include=FALSE} 
 #create model matrix without intercept and without nmqm
 x_mod <- model.matrix(nm~.-nmqm,data=munich_house)[,-1]
 y_mod <- munich_house$nm
@@ -97,7 +107,7 @@ lm_mod <- lm(nm~.,data=df_mod)
 summary(lm_mod)
 ```
 
-The the regression results show a lot of significant covariates. As maybe expected, the area `wfl` is strongly related to the rent price, however confusingly, the significance of different levels of the years of construction `bj` and districts `bez` varies a lot. From those both observations, it is not possible, to extract clear data analysis results, which also would match our interpretation of the problem. (@FB: better formulation)
+The the regression results show a lot of significant covariates. As maybe expected, the area `wfl` is strongly related to the rent price, however confusingly, the significance of different levels of the years of construction `bj` and districts `bez` varies a lot. From those both observations, it is not possible, to extract clear data analysis results, which also would match our interpretation of the problem. 
 
 
 ## Ridge Shrinkage
@@ -130,15 +140,16 @@ plot(ridge_fit, xvar = "lambda", label = T)
 abline(v = log(cv_ridge$lambda.1se))
 ```
 
-```{r ridgePlot, echo=FALSE, fig.cap="\\label{fig:ridge}Model selection for ridge shrinkage"} 
+```{r ridgePlot, echo=FALSE, fig.cap="\\label{fig:ridge}Model selection for ridge shrinkage", fig.width=8} 
+par(mfrow=c(1,2))
+# cross validation plot 
+plot(cv_ridge)
 # Plot for report
 plot(ridge_fit, xvar = "lambda", label = T) 
 abline(v = log(cv_ridge$lambda.1se))
-
-# add cross validation plot 
 ```
 
-In Figure \ref{fig:ridge}, the coefficients for the individual covariates are depicted agains $\log\lambda$, where the optimal $\lambda$ choice is highlighted. As typical for ridge, the coefficients are shrinked towards 0, but all parameters remain positive weights. This makes the outcome still hard to interpret for our practical data set at hand.
+In Figure \ref{fig:ridge} on the left, the cross validation for different values of the regularization parameter $\lambda$ is shown. On the right, the coefficients for the individual covariates are depicted agains $\log\lambda$, where the optimal $\lambda$-choice is highlighted. As typical for ridge, the coefficients are shrinked towards 0, but all parameters remain positive weights. This makes the outcome still hard to interpret for our practical data set at hand.
 
 
 ## Lasso
@@ -173,12 +184,16 @@ colnames(results_mod)=c("general lasso","vanilla LS")
 print(results_mod)
 ```
 
-```{r lassoPlot, echo=FALSE, fig.cap="\\label{fig:lasso}Model selection for lasso shrinkage"}
+```{r lassoPlot, echo=FALSE, fig.cap="\\label{fig:lasso}Model selection for lasso shrinkage", fig.width=8}
+par(mfrow=c(1,2))
+# cross validation plot 
+plot(cv_gen_mod)
+# Plot for report
 plot(gen_mod,xvar="lambda",label=TRUE)
 abline(v=log(cv_gen_mod$lambda.1se))
 ```
 
-In Figure \ref{fig:lasso}, we again see the model coefficients of the covariate set plotted against $\log\lambda$ where the optimal $\lambda$ chosen by cross validation and the decision rule in ELS in highlighted. Finally and as expected, some coeffiecients are shrinked to 0. However for the optimal $\lambda$, some levels of the construction years `bj` and some of the districts `bez` are shrinked to 0 and other would be still significant. For the practical model problem, this is a non-intuitive behaviour. 
+In Figure \ref{fig:lasso} on the left, the cross validation for different values of the regularization parameter $\lambda$ is shown. On the right, we again see the model coefficients of the covariate set plotted against $\log\lambda$ where the optimal $\lambda$ chosen by cross validation and the decision rule in ELS is highlighted. Finally and as expected, some coeffiecients are shrinked to 0. However for the optimal $\lambda$, some levels of the construction years `bj` and some of the districts `bez` are shrinked to 0 and other would be still significant. For the practical model problem, this is a non-intuitive behaviour. 
 
 
 ## Group lasso
@@ -238,25 +253,18 @@ fin_mod=gglasso(x = x_mod_group[,-1], y = y_mod, group = index_mod[-1], loss = "
 coef(fin_mod)
 ```
 
-```{r groupLassoPlot, echo=FALSE, fig.cap="\\label{fig:group}Model selection for group lasso"}
+```{r groupLassoPlot, echo=FALSE, fig.cap="\\label{fig:group}Model selection for group lasso", fig.width=8}
+par(mfrow=c(1,2))
+# cross validation plot (by package description loss="ls" is mean-squared error) 
+plot(cvfitls_mod)
 # Plot for report
 plot(fitls_mod)
 abline(v=(cvfitls_mod$lambda.1se))
 ```
 
-In Figure \ref{fig:group} we again depict the coefficients of the covariates against the $\log\lambda$ and highlight the optimal hyperparameter. By construction, all levels of a factorial variable are shrinked to simultaneously. This means that either all levels remain in the model or all levels are excluded, what corresponds better to the practical interpretation of those variables. 
+In Figure \ref{fig:group} on the left, the cross validation for different values of the regularization parameter $\lambda$ is shown (NB, `gglasso` does not show the number of active covariates in the head line above the plot). The jumps when a new group of covariates are included in the model are clearly visible. On the right, we again depict the coefficients of the covariates against the $\log\lambda$ and highlight the optimal hyperparameter. By construction, all levels of a factorial variable are shrinked to simultaneously. This means that either all levels remain in the model or all levels are excluded, what corresponds better to the practical interpretation of those variables. 
 
 
-## Conclusion
-
-```{r final, eval=TRUE, include=FALSE}
-#final results, group lasso either shrinks all or nothing and even increases some estimated parameter coefficients
-results_mod=cbind(coef(lm_mod), coef(ridge_fit,s=cv_ridge$lambda.1se), coef(gen_mod,s=cv_gen_mod$lambda.1se), coef(fin_mod))
-colnames(results_mod)=c("vanilla LS", "ridge", "general lasso", "group lasso")
-print(results_mod)
-```
-
-In this project, we have chosen a practical data set which contains data on rental prices in Munich (two of the group members are practically familiar with the difficult housing situation in Munich and it was appealing to analyse this statistically). For the data analysis, the factorial variables needed special attention. A plain vanilla and ridge regression were not capable to give explainable outcomes. Likewise, the result of the lasso was contra-intuitive in the unclear handling of the factorial varibles. Finally, the group lasso where a factorial varible can be arranged together leads to an interpretable shrinkage conclusion, where all variables except the factorial are selected for the optimal hyperparemeter choice.
 
 # Inference
 
@@ -266,7 +274,7 @@ Bootstrap can be applied here to find the proportion of times each element in th
 
 So to conclude, one can tell group lasso seems working suitably for this specific case where its categorical covariates have many groups. Ridge regression does not shrink any parameters dramatically while lasso does a bit on the shrinkage, but the most shrinked contributation is from group lasso.
 
-```{r,echo = F, eval=T, tidy = F, fig.width=20, fig.height=8}
+```{r,echo = F, eval=T, tidy = F, fig.width=16, fig.height=8, fig.cap="\\label{fog:bootstap}@YG: Please provide caption"}
 # ```{r,echo = F, eval=T, tidy = F}
 # boostrap loop
 set.seed(2021)
@@ -333,11 +341,23 @@ print(lassopp)
 barplot(lasso0perc)
 # barplot(grplasso0perc)
 ```
+@YG: Please provide description of plots and use \ref{fig:bootstrap} for referring 
 
 
 
+## Conclusion
+
+```{r final, eval=TRUE, include=FALSE}
+#final results, group lasso either shrinks all or nothing and even increases some estimated parameter coefficients
+results_mod=cbind(coef(lm_mod), coef(ridge_fit,s=cv_ridge$lambda.1se), coef(gen_mod,s=cv_gen_mod$lambda.1se), coef(fin_mod))
+colnames(results_mod)=c("vanilla LS", "ridge", "general lasso", "group lasso")
+print(results_mod)
+```
+
+In this project, we have chosen a practical data set which contains data on rental prices in Munich (two of the group members are practically familiar with the difficult housing situation in Munich and it was appealing to analyse this statistically). For the data analysis, the factorial variables needed special attention. A plain vanilla and ridge regression were not capable to give explainable outcomes. Likewise, the result of the lasso was contra-intuitive in the unclear handling of the factorial varibles. Finally, the group lasso where a factorial varible can be arranged together leads to an interpretable shrinkage conclusion, where all variables except the factorial are selected for the optimal hyperparemeter choice.
 
 
+@YG: Please provide a conclusion of the inference section in one short sentence
 
 
 
