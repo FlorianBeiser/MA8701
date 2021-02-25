@@ -434,4 +434,5 @@ print(results_mod)
 
 In this project, we have chosen a practical data set which contains data on rental prices in Munich (two of the group members are practically familiar with the difficult housing situation in Munich and it was appealing to analyse this statistically). For the data analysis, the factorial variables needed special attention. A plain vanilla and ridge regression were not capable to give explainable outcomes. Likewise, the result of the lasso was contra-intuitive in the unclear handling of the factorial varibles. Finally, the group lasso where a factorial variable can be arranged together leads to an interpretable shrinkage conclusion, where all variables except the factorial are selected for the optimal hyperparemeter choice. From the bootstrapping validation, it can be concluded that the variability of the coefficients seem to be high enough which hinder the implementation of a test set. 
 
+@YG: Inference should evaluate the goodness of the prediction (constructed with the group lasso) and data split is just a technique. So from bootstrapping we should get an outcome on the fit of our model and not on the techniques to use
 
