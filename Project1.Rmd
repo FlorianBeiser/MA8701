@@ -149,7 +149,6 @@ plot(ridge_fit, xvar = "lambda", label = T)
 abline(v = log(cv_ridge$lambda.1se))
 ```
 
-
 In Figure \ref{fig:ridge} on the left, the cross validation for different values of the regularization parameter $\lambda$ is shown. On the right, the coefficients for the individual covariates are depicted agains $\log\lambda$, where the optimal $\lambda$-choice is highlighted. As typical for ridge, the coefficients are shrinked towards 0, but all parameters remain positive weights. This makes the outcome still hard to interpret for our practical data set at hand.
 
 
@@ -316,9 +315,12 @@ The variance of the test mean is more than 121, which means that depending on th
 
 ## Bootstrapping
 
-As seen before, we cannot afford a split into test and training data for our data set, wherefore we use bootstrapping for inference. Bootstrap can be applied here to find the proportion of times each element in the coefficients vector of being zero. So it is a way of validation. For bootstrapping, boxplot and barplot can show how many percentages of that variable of being zero. They are hence useful for comparing with the shrinked results. From the barplot \ref{fig:barplot} one can tell that the majority of the coefficients for those year covariates `bj` and those factorical covariates `bez` are mainly zero while the dominating factors are non zero which reflects their significance as well. 
+As seen before, we cannot afford a split into test and training set for our data set, therefore we use bootstrapping for inference. Bootstrap can be applied here to find the proportion of times each covariate is shrinked to zero.  So it is a way of validation. By looking at the boxplot and barplot, we observe the percentage of time each variable is shrinked to zero.
 
-```{r,echo = F, eval=T, tidy = F, fig.width=16, fig.height=8, fig.cap="\\label{fig:barplot}"}
+@YG: Please describe shortly what is depicted in the barplot (just calling it "barplot" is not really informative for the reader, but you can assume a lot of preknowledge such that is done in one sentence). Same applies to boxplot.
+
+
+```{r,echo = F, eval=T, tidy = F, fig.width=16, fig.height=8, fig.cap="\\label{fig:barplot} @YG: Please provide still a caption and not just a label"}
 # ```{r,echo = F, eval=T, tidy = F}
 # boostrap loop
 set.seed(2021)
@@ -373,12 +375,18 @@ ridgeds=reshape2::melt(ridgematUI,variable.name="variable",value.name="value")
 ridgepp=ggplot(ridgeds,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("")
 
+
 lasso0perc=apply(abs(lassomat[,-1])<.Machine$double.eps,2,mean)
 # grplasso0perc=apply(abs(grplassomat[,-1])<.Machine$double.eps,2,mean)
 barplot(lasso0perc) # only use oridinary lasso here
 ```
 
-```{r, echo = F, eval=T, tidy = F, fig.width=15, fig.height=5, fig.cap="\\label{fig:boxplot}"}
+From the barplot \ref{fig:barplot} one can tell that the majority of the coefficients for those year covariates `bj` and those factorical covariates `bez` are mainly zero while the dominating factors are non zero which reflects their significance as well. 
+
+@YG: I put the description of the results after the displaying of the results to have a more logical order.
+
+
+```{r, echo = F, eval=T, tidy = F, fig.width=15, fig.height=5, fig.cap="\\label{fig:boxplot} @YG: Please provide still a caption and not just a label"}
 # In this section, some of the chosen variables to be plotted, to avoid the scaling from R to ignore the box
 n_selected = 24
 j = 0
@@ -401,16 +409,19 @@ print(lassopp)
 #   geom_boxplot()+ggtitle("")
 # print(grplassopp)
 ```
+
 The boxplot \ref{fig:boxplot} is thereafter to be viewed only with those significant covariates to demonstrate the variability of the corresponding coefficients. The bootstrapped boxplot does prove that the variability of some of coefficients are huge which might imply that the size of the dataset is too small to afford a test set. 
 
 So to conclude, one can tell group lasso seems working suitably for this specific case where its categorical covariates have many groups. Ridge regression does not shrink any parameters dramatically while lasso does a bit on the shrinkage, but the most shrinked contributation is from group lasso.
 
-=======
-@YG: what happened to the grouped covariates always being shrinked to zero in the histogram you showed last meeting?? This does not make sense, Please explain this tomorrow!What are you validating? The ridge, general lasso or the grouped one? Or are you validating them all at the same time? I'm not a bootstrap expert but I am lost, so please include an explanation!
-=======
-I am using `lasso`, which is simple, `grplasso` always give the same coefficients, I guess if it is converged, i.e., when we choose the 1se lambda, which shrinks the right part of the coefficients. Therefore, no matter how we change the dataset, it always yields the same coefficients. But I don't know, maybe we should recheck again the implementation from the grouplasso part. I directly used the one in the group lasso section.
 
+> @YG: what happened to the grouped covariates always being shrinked to zero in the histogram you showed last meeting?? This does not make sense, Please explain this tomorrow!What are you validating? The ridge, general lasso or the grouped one? Or are you validating them all at the same time? I'm not a bootstrap expert but I am lost, so please include an explanation!
 
+> YG: I am using `lasso`, which is simple, `grplasso` always give the same coefficients, I guess if it is converged, i.e., when we choose the 1se lambda, which shrinks the right part of the coefficients. Therefore, no matter how we change the dataset, it always yields the same coefficients. But I don't know, maybe we should recheck again the implementation from the grouplasso part. I directly used the one in the group lasso section.
+
+> @YG: Using only lasso in this section contradicts to the whole narrative of this report!! You can again include it but group lasso has to be there as well!
+
+> @YG: Remember to keep the code clean before submission.
 
 ## Conclusion
 
@@ -421,6 +432,8 @@ colnames(results_mod)=c("vanilla LS", "ridge", "general lasso", "group lasso")
 print(results_mod)
 ```
 
-In this project, we have chosen a practical data set which contains data on rental prices in Munich (two of the group members are practically familiar with the difficult housing situation in Munich and it was appealing to analyse this statistically). For the data analysis, the factorial variables needed special attention. A plain vanilla and ridge regression were not capable to give explainable outcomes. Likewise, the result of the lasso was contra-intuitive in the unclear handling of the factorial varibles. Finally, the group lasso where a factorial varible can be arranged together leads to an interpretable shrinkage conclusion, where all variables except the factorial are selected for the optimal hyperparemeter choice. From the inference validation, it can be concluded that the variability of the coefficients seem to be high enough which hinder the implementation of a test set.
+In this project, we have chosen a practical data set which contains data on rental prices in Munich (two of the group members are practically familiar with the difficult housing situation in Munich and it was appealing to analyse this statistically). For the data analysis, the factorial variables needed special attention. A plain vanilla and ridge regression were not capable to give explainable outcomes. Likewise, the result of the lasso was contra-intuitive in the unclear handling of the factorial varibles. Finally, the group lasso where a factorial variable can be arranged together leads to an interpretable shrinkage conclusion, where all variables except the factorial are selected for the optimal hyperparemeter choice. From the inference validation, it can be concluded that the variability of the coefficients seem to be high enough which hinder the implementation of a test set. 
+
+@YG: What about a conclusion for the bootstrapping part? If we say something about bootstrapping that conclusion that we do not afford a test set is immediate.
 
 
