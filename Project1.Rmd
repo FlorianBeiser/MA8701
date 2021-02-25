@@ -268,9 +268,33 @@ In Figure \ref{fig:group} on the left, the cross validation for different values
 
 # Inference
 
-The data set is too small to divide it into a training and a test set. 
+## Can we afford a test set?
 
-Bootstrap can be applied here to find the proportion of times each element in the coefficients vector of being zero. So it is a way of validation. By looking at the boxplot and barplot which show how many percentages of that variable of being zero, one can tell that the majority of the coefficients for those year covariates are zero while the rest of the dominating factors are non zero which reflects their significance as well. 
+The data set is presumably too small to divide it into a training and a test set. We investigate this assumption by pretending an 80/20 training-test split for 100 different random splittings and keeping track of the response mean of the test set. 
+
+```{r dataSplitting, eval=T, include=F}
+B = 100 # number of compared random splits
+a = 0.8 # splitting ratio for training set 
+
+split_means = rep(0, B)
+set.seed(1)
+for (b in 1:B){
+  # Generate a random selection of training indices 
+  split_idxs  <- sample(seq_len(nrow(munich_house)), size = floor(0.8*nrow(munich_house)))
+  # Separate the corresponding test set
+  split_test  <- munich_house[-split_idxs, "nm"]
+  # Store the test mean
+  split_means[b] <- mean(split_test)
+}
+
+var(split_means)
+```
+The variance is the test mean is more than 121, which means that depending on the split huge variations in the test data would be introduced, whereby the test data cannot be used for a proper representation of the original data set. This justifies why we cannot afford a split.
+
+
+## Bootstrapping
+
+As seen before, we cannot afford a split into test and training data for our data set, wherefore we use bootstrapping for inference. Bootstrap can be applied here to find the proportion of times each element in the coefficients vector of being zero. So it is a way of validation. By looking at the boxplot and barplot which show how many percentages of that variable of being zero, one can tell that the majority of the coefficients for those year covariates are zero while the rest of the dominating factors are non zero which reflects their significance as well. 
 
 So to conclude, one can tell group lasso seems working suitably for this specific case where its categorical covariates have many groups. Ridge regression does not shrink any parameters dramatically while lasso does a bit on the shrinkage, but the most shrinked contributation is from group lasso.
 
@@ -307,39 +331,30 @@ colnames(lassomat)=colnames(ridgemat)=c("Int.cept",colnames(x_mod))
 lassomatUI=lassomat[,-1]
 lassods=reshape2::melt(lassomatUI,
          variable.name ="variable",value.name="value")
-# par(mfrow = c(1, 1))
 lassopp=ggplot(lassods,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("")
-# print(lassopp)
-# lassopp
 
 grplassomatUI=grplassomat[,-1]
 grplassods=reshape2::melt(grplassomatUI,
          variable.name ="variable",value.name="value")
-# par(mfrow = c(1, 1))
 grplassopp=ggplot(grplassods,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("")
-# par(mfrow = c(2, 1))
-# print(grplassopp)
-# lassopp
 
 ridgematUI=ridgemat[,-1]
 ridgeds=reshape2::melt(ridgematUI,variable.name="variable",value.name="value")
 ridgepp=ggplot(ridgeds,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("")
-# print(ridgepp)
-# ridgepp
+
 
 lasso0perc=apply(abs(lassomat[,-1])<.Machine$double.eps,2,mean)
 lassods=reshape2::melt(lassomatUI,
          variable.name ="variable",value.name="value")
-# par(mfrow = c(1, 1))
 lassopp=ggplot(lassods,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("")
 print(lassopp)
-# grplasso0perc=apply(abs(grplassomat)<.Machine$double.eps,2,mean)
+
 barplot(lasso0perc)
-# barplot(grplasso0perc)
+
 ```
 @YG: Please provide description of plots and use \ref{fig:bootstrap} for referring 
 
