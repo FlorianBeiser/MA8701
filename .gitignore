@@ -46,7 +46,7 @@ vignettes/*.pdf
 # Ignoring binary knit outputs
 # PLEASE STAGE THE _FINAL_ REPORTS
 # use `git add -f ***.pdf`
-*.pdf
+#*.pdf
 *.html
 
 # Yaolins local files
