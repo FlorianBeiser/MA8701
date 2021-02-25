@@ -52,7 +52,7 @@ and the response
 
 -   `nm`: rental price (double).
 
-The label "double" naturally stands for numerical values, "int" categories parameters with integer values, and "Factor" symbolize parameter taking a certain number of levels. 
+The label "double" naturally stands for numerical values, "int" categorizes parameters with integer values, and "Factor" symbolize parameter taking a certain number of levels - where in contrast to integers a higher level does not necessarily means an improvement. 
 
 ```{r loadData, eval=TRUE, include=FALSE}
 # Load data set
@@ -218,7 +218,7 @@ index_mod <- c(NA,1,2,year,district,5,6,7,8,9,10,11) #individual groups for all 
 
 grp_lambda_mod <- lambdamax(x=x_mod_group, y = y_mod, index = index_mod, penscale = sqrt,
                           model = LinReg(),standardize = TRUE,center = TRUE)*0.5^(0:40)
-
+grp_lambda_mod <- grp_lambda_mod[c(3:(length(grp_lambda_mod)-10))]
 
 # fit using grouped index
 grp_mod <- grplasso(x=x_mod_group, y = y_mod, index = index_mod, lambda = grp_lambda_mod[-(1:3)], model = LinReg(),
@@ -262,7 +262,7 @@ plot(fitls_mod)
 abline(v=(cvfitls_mod$lambda.1se))
 ```
 
-In Figure \ref{fig:group} on the left, the cross validation for different values of the regularization parameter $\lambda$ is shown (NB, `gglasso` does not show the number of active covariates in the head line above the plot). The jumps when a new group of covariates are included in the model are clearly visible. On the right, we again depict the coefficients of the covariates against the $\log\lambda$ and highlight the optimal hyperparameter. By construction, all levels of a factorial variable are shrinked to simultaneously. This means that either all levels remain in the model or all levels are excluded, what corresponds better to the practical interpretation of those variables. 
+In Figure \ref{fig:group} on the left, the cross validation for different values of the regularization parameter $\lambda$ is shown. (NB, in contrast to the previous packages, `gglasso` does not show `nzeros`, the number of active covariates per $\lambda$, in the head line above the plot) The jumps when a new group of covariates are included in the model are clearly visible. On the right, we again depict the coefficients of the covariates against the $\log\lambda$ and highlight the optimal hyperparameter. By construction, all levels of a factorial variable are shrinked to simultaneously. This means that either all levels remain in the model or all levels are excluded, what corresponds better to the practical interpretation of those variables. 
 
 
 
@@ -297,6 +297,9 @@ The variance is the test mean is more than 121, which means that depending on th
 As seen before, we cannot afford a split into test and training data for our data set, wherefore we use bootstrapping for inference. Bootstrap can be applied here to find the proportion of times each element in the coefficients vector of being zero. So it is a way of validation. By looking at the boxplot and barplot which show how many percentages of that variable of being zero, one can tell that the majority of the coefficients for those year covariates are zero while the rest of the dominating factors are non zero which reflects their significance as well. 
 
 So to conclude, one can tell group lasso seems working suitably for this specific case where its categorical covariates have many groups. Ridge regression does not shrink any parameters dramatically while lasso does a bit on the shrinkage, but the most shrinked contributation is from group lasso.
+
+@YG: Please trim the boxplot as discussed in the meeting on Wednesday 
+@YG: Please change the order to follow the narrative which we discussed in the meeting on Wednesday
 
 ```{r,echo = F, eval=T, tidy = F, fig.width=16, fig.height=8, fig.cap="\\label{fog:bootstap}@YG: Please provide caption"}
 # ```{r,echo = F, eval=T, tidy = F}
