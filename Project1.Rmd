@@ -386,7 +386,7 @@ From the barplot \ref{fig:barplot} one can tell that the majority of the coeffic
 @YG: I put the description of the results after the displaying of the results to have a more logical order.
 
 
-```{r, echo = F, eval=T, tidy = F, fig.width=15, fig.height=5, fig.cap="\\label{fig:boxplot} @YG: Please provide still a caption and not just a label"}
+```{r, echo = F, eval=T, tidy = F, fig.width=15, fig.height=5, fig.cap="\\label{fig:boxplot} Boxplot of the coefficients"}
 # In this section, some of the chosen variables to be plotted, to avoid the scaling from R to ignore the box
 n_selected = 24
 j = 0
