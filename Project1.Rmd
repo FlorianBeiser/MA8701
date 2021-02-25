@@ -315,12 +315,9 @@ The variance of the test mean is more than 121, which means that depending on th
 
 ## Bootstrapping
 
-As seen before, we cannot afford a split into test and training set for our data set, therefore we use bootstrapping for inference. Bootstrap can be applied here to find the proportion of times each covariate is shrinked to zero.  So it is a way of validation. By looking at the boxplot and barplot, we observe the percentage of time each variable is shrinked to zero.
+As seen before, we cannot afford a split into test and training set for our data set, therefore we use bootstrapping for inference. Bootstrap can be applied here to find the proportion of times each covariate is shrinked to zero.  So it is a way of validation. Barplot demonstrates how many percentages of that coefficient being zero inside the bootstrap loop, while the boxplot gives the variability view on how dispersed or concentrated that coefficient can be.
 
-@YG: Please describe shortly what is depicted in the barplot (just calling it "barplot" is not really informative for the reader, but you can assume a lot of preknowledge such that is done in one sentence). Same applies to boxplot.
-
-
-```{r,echo = F, eval=T, tidy = F, fig.width=16, fig.height=8, fig.cap="\\label{fig:barplot} @YG: Please provide still a caption and not just a label"}
+```{r,echo = F, eval=T, tidy = F, fig.width=16, fig.height=8, fig.cap="\\label{fig:barplot} Barplot of the bootstrapped coefficients"}
 # ```{r,echo = F, eval=T, tidy = F}
 # boostrap loop
 set.seed(2021)
@@ -330,7 +327,10 @@ p=ncol(x_mod)
 lassomat=matrix(ncol=p+1,nrow=B)
 ridgemat=matrix(ncol=p+1,nrow=B)
 grplassomat=matrix(ncol=p+1,nrow=B)
-
+library(grplasso)
+library(gglasso)
+library(ggplot2)
+library(glmnet)
 # no need or separate function for steps 1-6 since can use cv.glmnet
 # and weight argument for giving the new bootstrapped data
 for (b in 1:B)
@@ -349,10 +349,11 @@ for (b in 1:B)
   ridgemat[b,]=as.vector(coef(resr)) 
   
   regrp_coef = coef(regrp) # it gives all the coefficients given the lambda grid
+  
   lambda_regrp = as.numeric(colnames(regrp_coef)) # find the corresponding element in the lambda grid
   index_lambda1se = which.min(abs(lambda_regrp - cvfitls_mod$lambda.1se)) # only use 1se lambda for validation
   grplassomat[b,]=as.vector(regrp_coef[,index_lambda1se]) # it always give the same coefficients? why this happened
-  # print(as.vector(regrp_coef[,index_lambda1se]))
+  print(as.vector(regrp_coef[,index_lambda1se]))
 }
 colnames(grplassomat)=colnames(ridgemat)=c("Int.cept",colnames(x_mod))
 colnames(lassomat)=colnames(ridgemat)=c("Int.cept",colnames(x_mod))
@@ -383,10 +384,7 @@ barplot(lasso0perc) # only use oridinary lasso here
 
 From the barplot \ref{fig:barplot} one can tell that the majority of the coefficients for those year covariates `bj` and those factorical covariates `bez` are mainly zero while the dominating factors are non zero which reflects their significance as well. 
 
-@YG: I put the description of the results after the displaying of the results to have a more logical order.
-
-
-```{r, echo = F, eval=T, tidy = F, fig.width=15, fig.height=5, fig.cap="\\label{fig:boxplot} Boxplot of the coefficients"}
+```{r, echo = F, eval=T, tidy = F, fig.width=15, fig.height=5, fig.cap="\\label{fig:boxplot} Boxplot of the bootstrapped coefficients"}
 # In this section, some of the chosen variables to be plotted, to avoid the scaling from R to ignore the box
 n_selected = 24
 j = 0
@@ -422,6 +420,8 @@ So to conclude, one can tell group lasso seems working suitably for this specifi
 > @YG: Using only lasso in this section contradicts to the whole narrative of this report!! You can again include it but group lasso has to be there as well!
 
 > @YG: Remember to keep the code clean before submission.
+>YG: code is clean, git is not.
+>YG: I think lasso did the work of visualising the purpose of small dataset, i.e., it is too various when looping through, therefore, we have a small dataset. If grouplasso is correct, we can again plot them. But agree on which form to use. But as for validataion in the inference part, it suffices to show the varibility. As for method validation, I think it is true as what Mette said, we can try to use different lasso variants. From the boxplot, it is not that interesting to see anything, since it is very stable or no variation. 
 
 ## Conclusion
 
