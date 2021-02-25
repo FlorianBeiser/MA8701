@@ -52,7 +52,7 @@ and the response
 
 -   `nm`: rental price (double).
 
-The label "double" naturally stands for numerical values, "int" categorizes parameters with integer values, and "Factor" symbolize parameter taking a certain number of levels - where in contrast to integers a higher level does not necessarily means an improvement. 
+The label "double" naturally stands for numerical values, "int" categorizes parameters with integer values, and "Factor" symbolize parameter taking a certain number of levels - where in contrast to integers a higher level does not necessarily mean an improvement. 
 
 ```{r loadData, eval=TRUE, include=FALSE}
 # Load data set
@@ -62,7 +62,7 @@ munich_house <- read.table(
 
 ```
 
-Since the price per square meter `nmqm` multiplied with the area `wfl` directly gives the rental price which the response in the system, it does not make sense to keep both values. Hence, we exclude `nmqm` from the data frame to be able to do serious data analysis on the dataset. 
+Since the price per square meter `nmqm` multiplied with the area `wfl` directly gives the rental price `nm` which we define as the response in the system, it does not make sense to keep both values. Hence, we exclude `nmqm` from the data set to avoid it consuming all the significance in the coming data analysis. 
 
 
 ```{r dataPlot, echo=FALSE, fig.cap="\\label{fig:data}Exploration of multi-colinearity in the data set"} 
@@ -75,7 +75,7 @@ corrplot.mixed(cor(xss),upper = "ellipse", lower = "number", tl.cex = 0.5)
 
 Figure \ref{fig:data} shows the correlation between covariates ignoring the factorials and reveals that the dataset may suffer from a very light multi-colinearity. 
 
-However, the factorial variable `bj` and `bez` introduce 44 and 25 levels, respectively, leading to relatively unclear dependencies between the full covariate set (with factorial variables) and the response, which makes this dataset suitable for a regression analysis and the application of shrinkage methods. 
+However, the factorial variable `bj` and `bez` introduce 44 and 25 levels, respectively, leading to relatively unclear dependencies between the full covariate set (including factorial variables) and the response, which makes this dataset suitable for a regression analysis and the application of shrinkage methods. 
 
 ```{r buildDataFrame, eval=TRUE, include=FALSE} 
 # 
@@ -194,7 +194,7 @@ plot(gen_mod,xvar="lambda",label=TRUE)
 abline(v=log(cv_gen_mod$lambda.1se))
 ```
 
-In Figure \ref{fig:lasso} on the left, the cross validation for different values of the regularization parameter $\lambda$ is shown. On the right, we again see the model coefficients of the covariate set plotted against $\log\lambda$ where the optimal $\lambda$ chosen by cross validation and the decision rule in ELS is highlighted. Finally and as expected, some coeffiecients are shrinked to 0. However for the optimal $\lambda$, some levels of the construction years `bj` and some of the districts `bez` are shrinked to 0 and other would be still significant. For the practical model problem, this is a non-intuitive behaviour. 
+In Figure \ref{fig:lasso} on the left, the cross validation for different values of the regularization parameter $\lambda$ is shown. On the right, we again see the model coefficients of the covariate set plotted against $\log\lambda$ where the optimal $\lambda$ chosen by cross validation and the decision rule in ELS is highlighted. Finally and as expected, some coefficients are shrinked to 0. However for the optimal $\lambda$, some levels of the construction years `bj` and some of the districts `bez` are shrinked to 0 and other would be still significant. For the practical model problem, this is a non-intuitive behaviour. 
 
 
 ## Group lasso
@@ -233,7 +233,7 @@ coef(grp_mod)
 
 ```
 
-Again we employ the same model selection criterion via cross validation as above, but implement it in R using the `gglasso` library. In the cross validation procedure, we can observe sudden jumps when a new group is taken into or out from the model, since the calculatations either include all or non of the levels of the factorial variables, what can yield to a jump in the number of parameters from 9 to 53 in a single step on the lmabda grid. 
+Again we employ the same model selection criterion via cross validation as above, but as `grplasso` does not contain a built in cv function of our knowledge, we implement it in R using the `gglasso` library. In the cross validation procedure, we can observe sudden jumps when a new group is included or shrinked from the model. Since the calculatations either include all or none of the levels of the factorial variables, this can lead to a jump in the number of parameters from 9 to 53 in a single step on the lambda grid. 
 
 ```{r groupLassoCV, eval=T, include=F}
 # Load gglasso library for cross validation
@@ -263,9 +263,30 @@ plot(fitls_mod)
 abline(v=(cvfitls_mod$lambda.1se))
 ```
 
-In Figure \ref{fig:group} on the left, the cross validation for different values of the regularization parameter $\lambda$ is shown. (NB, in contrast to the previous packages, `gglasso` does not show `nzeros`, the number of active covariates per $\lambda$, in the head line above the plot) The jumps when a new group of covariates are included in the model are clearly visible. On the right, we again depict the coefficients of the covariates against the $\log\lambda$ and highlight the optimal hyperparameter. By construction, all levels of a factorial variable are shrinked to simultaneously. This means that either all levels remain in the model or all levels are excluded, what corresponds better to the practical interpretation of those variables. 
+In Figure \ref{fig:group} on the left, the cross validation for different values of the regularization parameter $\lambda$ is shown. (NB, in contrast to the previous packages, `gglasso` does not show `nzeros`, the number of active covariates per $\lambda$, in the head line above the plot) The jumps when a new group of covariates are included in the model are clearly visible. On the right, we again depict the coefficients of the covariates against the $\log\lambda$ and highlight the optimal hyperparameter. By construction, all levels of a factorial variable are shrinked to zero simultaneously. This means that either all levels remain in the model or all levels are excluded, which corresponds better to the practical interpretation of those variables. 
+
+## Summary
 
 
+```{r parSum, eval=TRUE, include=TRUE, echo = FALSE}
+#final results, group lasso either shrinks all or nothing and even increases some estimated parameter coefficients
+results_mod=cbind(coef(lm_mod), coef(ridge_fit,s=cv_ridge$lambda.1se), coef(gen_mod,s=cv_gen_mod$lambda.1se), coef(fin_mod))
+colnames(results_mod)=c("vanilla LS", "ridge", "general lasso", "group lasso")
+#Compare the results with the significant cov in lm 
+#print(results_mod)
+#summary(lm_mod)
+
+#print a subset of results
+print(results_mod[c(1,2,3,43,44,60,61,71:77),])
+```
+
+Lastly, we depict a subset of 14 parameter estimates from the methods presented in this report, with most of the grouped covariates for `bez` and `bj` removed for simplicity. 
+
+By including two estimated parameters from `bez` and `bj`, we demonstrate the non-intuitive behaviour of the general lasso. We observe that the `bez` and `bj` parameters not shrinked by the general lasso, corresponds to the highly significant covariates in the vanilla LS. Furthermore, there is a continuous shrinkage of the grouped covariates, starting from vanilla LS, shrinked in rigde and then further in general lasso, before finally resulting in zero for the grouped lasso. These trends are repeated for all parameter estimates in `bez` and `bj`, including the ones not listed above. 
+
+For the non grouped covariates however, the shrinkage is moving in a bumpy pace, by sometimes being shrinked and other times in fact increased when compared to the Vanilla LS.
+
+@HMO How to explain this last part???? Do we need to include it? I am a true believer of the less you know the less you say
 
 # Inference
 
@@ -290,12 +311,21 @@ for (b in 1:B){
 
 var(split_means)
 ```
-The variance is the test mean is more than 121, which means that depending on the split huge variations in the test data would be introduced, whereby the test data cannot be used for a proper representation of the original data set. This justifies why we cannot afford a split.
+The variance of the test mean is more than 121, which means that depending on the split huge variations in the test data would be introduced, whereby the test data cannot be used for a proper representation of the original data set. This justifies why we cannot afford a split.
 
 
 ## Bootstrapping
 
+<<<<<<< HEAD
 As seen before, we cannot afford a split into test and training data for our data set, wherefore we use bootstrapping for inference. Bootstrap can be applied here to find the proportion of times each element in the coefficients vector of being zero. So it is a way of validation. For bootstrapping, boxplot and barplot can show how many percentages of that variable of being zero. They are hence useful for comparing with the shrinked results. From the barplot \ref{fig:barplot} one can tell that the majority of the coefficients for those year covariates `bj` and those factorical covariates `bez` are mainly zero while the dominating factors are non zero which reflects their significance as well. 
+=======
+As seen before, we cannot afford a split into test and training set for our data set, therefore we use bootstrapping for inference. Bootstrap can be applied here to find the proportion of times each covariate is shrinked to zero. So it is a way of validation. By looking at the boxplot and barplot, we observe the percentage of time each variable is shrinked to zero. One can tell that the majority of the coefficients for the year covariates are zero while the rest of the dominating factors are non zero, which reflects their significance as well. 
+
+In conclusion, one can tell group lasso seems to work suitably for this specific case where its categorical covariates have many groups. Ridge regression does not shrink any parameters dramatically while lasso does a bit on the shrinkage, but the most shrinked contribution is from group lasso. 
+
+@YG: Please trim the boxplot as discussed in the meeting on Wednesday 
+@YG: Please change the order to follow the narrative which we discussed in the meeting on Wednesday
+>>>>>>> 040f4f55df7177b5053c51be782d9dc3d31506f6
 
 ```{r,echo = F, eval=T, tidy = F, fig.width=16, fig.height=8, fig.cap="\\label{fig:barplot}"}
 # ```{r,echo = F, eval=T, tidy = F}
@@ -382,8 +412,12 @@ print(lassopp)
 ```
 The boxplot \ref{fig:boxplot} is thereafter to be viewed only with those significant covariates to demonstrate the variability of the corresponding coefficients. The bootstrapped boxplot does prove that the variability of some of coefficients are huge which might imply that the size of the dataset is too small to afford a test set. 
 
+<<<<<<< HEAD
 So to conclude, one can tell group lasso seems working suitably for this specific case where its categorical covariates have many groups. Ridge regression does not shrink any parameters dramatically while lasso does a bit on the shrinkage, but the most shrinked contributation is from group lasso.
 
+=======
+@YG: what happened to the grouped covariates always being shrinked to zero in the histogram you showed last meeting?? This does not make sense, Please explain this tomorrow!What are you validating? The ridge, general lasso or the grouped one? Or are you validating them all at the same time? I'm not a bootstrap expert but I am lost, so please include an explanation!
+>>>>>>> 040f4f55df7177b5053c51be782d9dc3d31506f6
 
 ## Conclusion
 
@@ -394,7 +428,14 @@ colnames(results_mod)=c("vanilla LS", "ridge", "general lasso", "group lasso")
 print(results_mod)
 ```
 
+<<<<<<< HEAD
 In this project, we have chosen a practical data set which contains data on rental prices in Munich (two of the group members are practically familiar with the difficult housing situation in Munich and it was appealing to analyse this statistically). For the data analysis, the factorial variables needed special attention. A plain vanilla and ridge regression were not capable to give explainable outcomes. Likewise, the result of the lasso was contra-intuitive in the unclear handling of the factorial varibles. Finally, the group lasso where a factorial varible can be arranged together leads to an interpretable shrinkage conclusion, where all variables except the factorial are selected for the optimal hyperparemeter choice. From the inference validation, it can be concluded that the variability of 
+=======
+In this project, we have chosen a practical data set which contains data on rental prices in Munich (two of the group members are practically familiar with the difficult housing situation in Munich and it was appealing to analyse this statistically). For the data analysis, the factorial variables needed special attention. A plain vanilla and ridge regression were not capable to give explainable outcomes. Likewise, the result of the lasso was contra-intuitive in the unclear handling of the factorial varibles. Finally, the group lasso where a factorial variable can be arranged together leads to an interpretable shrinkage conclusion, where all variables except the factorial are selected for the optimal hyperparemeter choice.
+
+
+@YG: Please provide a conclusion of the inference section in one short sentence
+>>>>>>> 040f4f55df7177b5053c51be782d9dc3d31506f6
 
 
 
