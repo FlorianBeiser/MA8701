@@ -317,7 +317,7 @@ The variance of the test mean is more than 121, which means that depending on th
 
 As seen before, we cannot afford a split into test and training set for our data set, therefore we use bootstrapping for inference. Bootstrap can be applied here to find the proportion of times each covariate is shrinked to zero.  So it is a way of validation. Barplot demonstrates how many percentages of that coefficient being zero inside the bootstrap loop, while the boxplot gives the variability view on how dispersed or concentrated that coefficient can be.
 
-```{r,echo = F, eval=T, tidy = F, fig.width=16, fig.height=8, fig.cap="\\label{fig:barplot} Barplot of the bootstrapped coefficients"}
+```{r,echo = F, eval=T, tidy = F, fig.width=16, fig.height=4, fig.cap="\\label{fig:barplot} Barplot of the bootstrapped coefficients"}
 # ```{r,echo = F, eval=T, tidy = F}
 # boostrap loop
 set.seed(2021)
@@ -370,7 +370,7 @@ grplassods=reshape2::melt(grplassomatUI,
          variable.name ="variable",value.name="value")
 grplassopp=ggplot(grplassods,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("")
-print(grplassopp)
+# print(grplassopp)
 
 ridgematUI=ridgemat[,-1]
 ridgeds=reshape2::melt(ridgematUI,variable.name="variable",value.name="value")
@@ -383,33 +383,43 @@ barplot(grplasso0perc) # only use oridinary lasso here
 # barplot(lasso0perc) # only use oridinary lasso here
 ```
 
-From the barplot \ref{fig:barplot} one can tell that the majority of the coefficients for those year covariates `bj` and those factorical covariates `bez` are mainly zero while the dominating factors are non zero which reflects their significance as well. 
+From the barplot \ref{fig:barplot} one can tell that after the grouplasso implementation, the majority of the coefficients for those year covariates `bj` and those factorical covariates `bez` are not remaining zero since they are well considered in the group lasso already. 
 
 ```{r, echo = F, eval=T, tidy = F, fig.width=15, fig.height=5, fig.cap="\\label{fig:boxplot} Boxplot of the bootstrapped coefficients"}
 # In this section, some of the chosen variables to be plotted, to avoid the scaling from R to ignore the box
-n_selected = 24
-j = 0
-val_selected_vec = matrix(0, 100 * n_selected, 3)
-val_selected = matrix(0, 100, n_selected)
-col_names = list()
-for (i in c(2, 3, 28:42, 70:76)){
-  j = j + 1
-  val_selected[, j] = lassomat[, i]
-  col_names = c(col_names, colnames(x_mod)[i])
-  # val_selected[((j-1) * 100 + 1) : (j * 100), ] = as.matrix(lassods[lassods$Var2 == colnames(x_mod)[i],], row.names = FALSE)
-}
-colnames(val_selected) = col_names
-lassods=reshape2::melt(val_selected,
+
+# n_selected = 24
+# j = 0
+# val_selected_vec = matrix(0, 100 * n_selected, 3)
+# val_selected = matrix(0, 100, n_selected)
+# col_names = list()
+# for (i in c(2, 3, 28:42, 70:76)){
+#   j = j + 1
+#   val_selected[, j] = lassomat[, i]
+#   col_names = c(col_names, colnames(x_mod)[i])
+#   # val_selected[((j-1) * 100 + 1) : (j * 100), ] = as.matrix(lassods[lassods$Var2 == colnames(x_mod)[i],], row.names = FALSE)
+# }
+# colnames(val_selected) = col_names
+# lassods=reshape2::melt(val_selected,
+#          variable.name ="variable",value.name="value")
+# lassopp=ggplot(lassods,aes(x=Var2,y=value))+
+#   geom_boxplot()+ggtitle("")
+# print(lassopp)
+
+
+grplassomatUI=grplassomat[,-1]
+grplassods=reshape2::melt(grplassomatUI,
          variable.name ="variable",value.name="value")
-lassopp=ggplot(lassods,aes(x=Var2,y=value))+
+grplassopp=ggplot(grplassods,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("")
-print(lassopp)
+print(grplassopp)
+
 # grplassopp=ggplot(val_selected[1:100, ],aes(x=Var2,y=value))+
 #   geom_boxplot()+ggtitle("")
 # print(grplassopp)
 ```
 
-The boxplot \ref{fig:boxplot} is thereafter to be viewed only with those significant covariates to demonstrate the variability of the corresponding coefficients. The bootstrapped boxplot does prove that the variability of some of coefficients are huge which might imply that the size of the dataset is too small to afford a test set. 
+The boxplot \ref{fig:boxplot} reveals the variability of those covariates that used to be zero. It also demonstrates the efficacy of using grouplasso for considering such conditions where many factorial variables are present in the dataset, normal lasso or ridge methods tend to ignore them by shrinking them to zeros. However, the grouplasso takes into account for their significance as well. The bootstrapped boxplot does prove that the variability of some of coefficients are huge which might imply that the size of the dataset is too small to afford a test set. 
 
 So to conclude, one can tell group lasso seems working suitably for this specific case where its categorical covariates have many groups. Ridge regression does not shrink any parameters dramatically while lasso does a bit on the shrinkage, but the most shrinked contributation is from group lasso.
 
@@ -423,6 +433,8 @@ So to conclude, one can tell group lasso seems working suitably for this specifi
 > @YG: Remember to keep the code clean before submission.
 >YG: code is clean, git is not.
 >YG: I think lasso did the work of visualising the purpose of small dataset, i.e., it is too various when looping through, therefore, we have a small dataset. If grouplasso is correct, we can again plot them. But agree on which form to use. But as for validataion in the inference part, it suffices to show the varibility. As for method validation, I think it is true as what Mette said, we can try to use different lasso variants. From the boxplot, it is not that interesting to see anything, since it is very stable or no variation. 
+
+>YG: Added grouplasso bootstrap, it coincide with the conclusions now. But only full boxplot can reveal the full picture of the group lasso, thus full boxplot is shown.
 
 ## Conclusion
 
