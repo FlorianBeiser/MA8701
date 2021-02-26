@@ -317,7 +317,7 @@ The variance of the test mean is more than 121, which means that depending on th
 
 As seen before, we cannot afford a split into test and training set for our data set, therefore we use bootstrapping for inference. Bootstrap can be applied here to find the proportion of times each covariate is shrinked to zero.  So it is a way of validation. 
 
-```{r,echo = F, eval=T, tidy = F, fig.width=16, fig.height=4}
+```{r,echo = F, eval=T, tidy = F, fig.width=16, fig.height=5, fig.cap="\\label{fig:boxplot_lasso} Boxplot of the bootstrapped general lasso coefficients"}
 # ```{r,echo = F, eval=T, tidy = F}
 # boostrap loop
 set.seed(2021)
@@ -356,6 +356,7 @@ lassods=reshape2::melt(lassomatUI,
          variable.name ="variable",value.name="value")
 lassopp=ggplot(lassods,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("")
+print(lassopp)
 
 grplassomatUI=grplassomat[,-1]
 grplassods=reshape2::melt(grplassomatUI,
@@ -369,34 +370,13 @@ ridgepp=ggplot(ridgeds,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("")
 ```
 
-```{r, echo = F, eval=T, tidy = F, fig.width=15, fig.height=5, fig.cap="\\label{fig:boxplot_lasso} Boxplot of the bootstrapped group lasso selected coefficients"}
+```{r, echo = F, eval=T, tidy = F, fig.width=15, fig.height=5, fig.cap="\\label{fig:boxplot_grplasso} Boxplot of the bootstrapped group lasso selected coefficients"}
 # In this section, some of the chosen variables to be plotted, to avoid the scaling from R to ignore the box
 var_selected = c(2, 3, 28:42, 70:76)
 n_selected = length(var_selected)
 val_selected_vec = matrix(0, 100 * n_selected, 3)
 val_selected = matrix(0, 100, n_selected)
 
-col_names = list()
-j = 0
-for (i in var_selected){
-  j = j + 1
-  val_selected[, j] = lassomat[, i]
-  col_names = c(col_names, colnames(x_mod)[i])
-}
-colnames(val_selected) = col_names
-lassods=reshape2::melt(val_selected,
-         variable.name ="variable",value.name="value")
-lassopp=ggplot(lassods,aes(x=Var2,y=value))+
-  geom_boxplot()+ggtitle("")
-print(lassopp)
-```
-
-```{r, echo = F, eval=T, tidy = F, fig.width=15, fig.height=5, fig.cap="\\label{fig:boxplot_grplasso} Boxplot of the bootstrapped group lasso selected coefficients"}
-# In this section, some of the chosen variables to be plotted, to avoid the scaling from R to ignore the box
-# n_selected = 24
-# j = 0
-# val_selected_vec = matrix(0, 100 * n_selected, 3)
-# val_selected = matrix(0, 100, n_selected)
 col_names = list()
 j = 0
 for (i in var_selected){
@@ -412,7 +392,7 @@ grplassopp=ggplot(grplassods,aes(x=Var2,y=value))+
 print(grplassopp)
 ```
 
-The boxplot \ref{fig:boxplot_lasso} and \ref{fig:boxplot_grplasso} validates our motivation to use group lasso. The general lasso coefficients as depicted in \ref{fig:boxplot_lasso} shows a huge variablity in the factorial variable regions, where `bj` and `bez` have large span over the coefficient range. While the group lasso as in \ref{fig:boxplot_grplasso} shrinks the corresponding coefficients to zero. It coincides with the efficacy of using grouplasso for this specific dataset with mulitple factorial covariates. 
+The boxplot \ref{fig:boxplot_lasso} and \ref{fig:boxplot_grplasso} validates our motivation to use group lasso. The general lasso coefficients as depicted in \ref{fig:boxplot_lasso} shows a huge variablity in the factorial variable regions, where `bj` and `bez` have large span over the coefficient range. While the group lasso as in \ref{fig:boxplot_grplasso} shrinks the corresponding coefficients to zero. It coincides with the efficacy of using grouplasso for this specific dataset with mulitple factorial covariates. Since many of those coefficients are shrinked to zeros in the group lasso boxplot, as opposed to the general lasso boxplot, thereby it is logical to only include some of the coefficients where they show huge variation in the counterpart general lasso boxplot for the factorial covariates `bj` and `bez` as a comparison.
 
 So to conclude, one can tell group lasso seems working suitably for this specific case where its categorical covariates have many groups. Ridge regression does not shrink any parameters dramatically while lasso does a bit on the shrinkage, but the most shrinked contributation is from group lasso.
 
