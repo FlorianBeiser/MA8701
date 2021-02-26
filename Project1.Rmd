@@ -285,7 +285,7 @@ By including two estimated parameters from `bez` and `bj`, we demonstrate the no
 
 For the non grouped covariates however, the shrinkage is moving in a bumpy pace, by sometimes being shrinked and other times in fact increased when compared to the Vanilla LS.
 
-@HMO How to explain this last part???? Do we need to include it? I am a true believer of the less you know the less you say
+For the non grouped covariates however, the shrinkage is moving in a bumpy pace, by sometimes being shrinked and other times in fact increased when compared to the Vanilla LS. This might be explained by the fact that there is correlation between the variables, and by shrinking the grouped covariates, the non grouped covariates contain more of the variability of the data set for the optimal lambda. 
 
 # Inference
 
