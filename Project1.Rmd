@@ -377,10 +377,10 @@ ridgeds=reshape2::melt(ridgematUI,variable.name="variable",value.name="value")
 ridgepp=ggplot(ridgeds,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("")
 
-grplasso0perc=apply(abs(grplassomat[,-1])<.Machine$double.eps,2,mean)
-barplot(grplasso0perc) # only use oridinary lasso here
-# lasso0perc=apply(abs(lassomat[,-1])<.Machine$double.eps,2,mean)
-# barplot(lasso0perc) # only use oridinary lasso here
+# grplasso0perc=apply(abs(grplassomat[,-1])<.Machine$double.eps,2,mean)
+# barplot(grplasso0perc) # only use oridinary lasso here
+lasso0perc=apply(abs(lassomat[,-1])<.Machine$double.eps,2,mean)
+barplot(lasso0perc) # only use oridinary lasso here
 ```
 
 From the barplot \ref{fig:barplot} one can tell that after the grouplasso implementation, the majority of the coefficients for those year covariates `bj` and those factorical covariates `bez` are not remaining zero since they are well considered in the group lasso already. 
@@ -388,31 +388,31 @@ From the barplot \ref{fig:barplot} one can tell that after the grouplasso implem
 ```{r, echo = F, eval=T, tidy = F, fig.width=15, fig.height=5, fig.cap="\\label{fig:boxplot} Boxplot of the bootstrapped coefficients"}
 # In this section, some of the chosen variables to be plotted, to avoid the scaling from R to ignore the box
 
-# n_selected = 24
-# j = 0
-# val_selected_vec = matrix(0, 100 * n_selected, 3)
-# val_selected = matrix(0, 100, n_selected)
-# col_names = list()
-# for (i in c(2, 3, 28:42, 70:76)){
-#   j = j + 1
-#   val_selected[, j] = lassomat[, i]
-#   col_names = c(col_names, colnames(x_mod)[i])
-#   # val_selected[((j-1) * 100 + 1) : (j * 100), ] = as.matrix(lassods[lassods$Var2 == colnames(x_mod)[i],], row.names = FALSE)
-# }
-# colnames(val_selected) = col_names
-# lassods=reshape2::melt(val_selected,
-#          variable.name ="variable",value.name="value")
-# lassopp=ggplot(lassods,aes(x=Var2,y=value))+
-#   geom_boxplot()+ggtitle("")
-# print(lassopp)
-
-
-grplassomatUI=grplassomat[,-1]
-grplassods=reshape2::melt(grplassomatUI,
+n_selected = 24
+j = 0
+val_selected_vec = matrix(0, 100 * n_selected, 3)
+val_selected = matrix(0, 100, n_selected)
+col_names = list()
+for (i in c(2, 3, 28:42, 70:76)){
+  j = j + 1
+  val_selected[, j] = lassomat[, i]
+  col_names = c(col_names, colnames(x_mod)[i])
+  # val_selected[((j-1) * 100 + 1) : (j * 100), ] = as.matrix(lassods[lassods$Var2 == colnames(x_mod)[i],], row.names = FALSE)
+}
+colnames(val_selected) = col_names
+lassods=reshape2::melt(val_selected,
          variable.name ="variable",value.name="value")
-grplassopp=ggplot(grplassods,aes(x=Var2,y=value))+
+lassopp=ggplot(lassods,aes(x=Var2,y=value))+
   geom_boxplot()+ggtitle("")
-print(grplassopp)
+print(lassopp)
+
+
+# grplassomatUI=grplassomat[,-1]
+# grplassods=reshape2::melt(grplassomatUI,
+#          variable.name ="variable",value.name="value")
+# grplassopp=ggplot(grplassods,aes(x=Var2,y=value))+
+#   geom_boxplot()+ggtitle("")
+# print(grplassopp)
 
 # grplassopp=ggplot(val_selected[1:100, ],aes(x=Var2,y=value))+
 #   geom_boxplot()+ggtitle("")
