@@ -3,7 +3,7 @@
 
 This is the repo for three students named Florian, Helene, Yaolin who worked during 2021 for the course project2 in MA8701. 
 
-It contains ![P1](./P1/) and ![P2](./P3/) two projects. 
+It contains ![P1](P1/) and ![P2](P3/) two projects. 
 
 `P1` is the data analysis project for MA8701 on the MUNICH rental index dataset, whixh has around 2000 data samples. For the statistical modelling of this dataset, we used the following methods to fit the model. 
 
