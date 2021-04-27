@@ -1,0 +1,106 @@
+---
+subtitle: "MA8701 Advanced Methods in Statistical Inference and Learning V2021"
+title: "Data Analysis Project 2"
+author: "Florian Beiser, Yaolin Ge  & Helene Minge Olsen"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+ # html_document
+  pdf_document
+---
+  
+
+```{r rpackages,eval=TRUE,echo=FALSE, message=FALSE, warning=FALSE}
+#install.packages("tree")
+#install.packages("randomForest")
+#install.packages("data.table")
+
+library(tree)
+library(randomForest)
+library(data.table)
+```
+
+# Random Forest Model Fit 
+
+```{r,eval=T,echo=F}
+#library(data.table)
+
+#Data preprocessing
+temp_dat <- read.csv("dataset1.csv")
+
+#fetch water temp to create a shift in response 
+tmp_col<- temp_dat[,"water_temp"]
+tmp_shift <- shift(tmp_col,n=1)
+new_tmp <- cbind(temp_dat,tmp_shift)
+colnames(new_tmp)[19] <- "response"
+
+#remove first row
+new_tmp <- new_tmp[-1,]
+
+#visualize data
+#plot(temp_dat$time,temp_dat$water_temp)
+
+#year index up to 2019
+temp_dat_ind <- sample(1:1858)
+
+#create train and test set
+#2016-2019 train
+temp_train <- new_tmp[temp_dat_ind,]
+#2020 test
+temp_test <- new_tmp[-temp_dat_ind,]
+
+#inspect data - no info? no problem with RF
+check <-temp_dat$SN19940wind_speed1
+#head(check)
+check2 <- temp_dat$SN18700cloud_area_fraction1
+#head(check2)
+```
+As our data set is a time series, we include the water temperature the day before as a covariate. As a result, we know that this strong predictor `water_temp` will dominate the trees produced if we choose to use bagging. To obtain decorrelated trees and improve the variance reduction, we therefore want to fit a random forest model to our data set. 
+
+We utilize the `randomForest` package in R. As the random forest allows a random selection of $m$ covariates $m \leq p$ to be considered for the split for each node, a 5-fold cross validation was applied to find the optimum number of covariates. As the data set contains 19 variables, the general rule for regression is to set the number of randomly chosen variables to be considered as $floor(\frac{19}{3}) = 6$. However, we obtain the smallest cross-validation error for $m=4$. This can be explained by our data set being very correlated, and it is therefore wise to set $m$ to be small. 
+
+```{r,eval=TRUE,echo=FALSE}
+library(randomForest)
+#CV to find optimal mtry, takes a long time to run 
+#randomForest::rfcv(trainx = temp_train[,c(2:18)],trainy =temp_train[,"response"])
+
+#build a random forest with mtry = 4 
+rf_temp <- randomForest(response ~ .-time, data = new_tmp, subset = temp_dat_ind, mtry =4, importance= TRUE)
+#to see fit summary uncomment next line
+#rf_temp
+
+```
+
+```{r,eval=TRUE,echo=FALSE,tidy = F, fig.width=10, fig.height=5, fig.cap="\\label{fig:RFRunPlot} Plot of numbers of trees"}
+plot(rf_temp, main = "")
+```
+
+As each tree uses a different bootstrap sample, the OOB sample is used as a validation set. From Figure \ref{fig:RFRunPlot} we observe how the OOB error estimate is reduced as a function of the nr of trees. As a result, the model fits 500 trees to average over, with a percentage of variance explained, also known as pseudo R-squared, around 91.97$\%$
+
+```{r,eval=TRUE,echo=FALSE,tidy = F, fig.width=10, fig.height=5, fig.cap="\\label{fig:RFTestPlot} Predicted test values against true values."}
+#test
+yhat_rf <- predict(rf_temp, newdata = temp_test)
+temp_plot <- temp_test[,"response"] 
+plot(yhat_rf, temp_plot, xlab = "Predicted Temperature", ylab = "True Temperature")
+abline(0,1)
+```
+
+Figure \ref{fig:RFTestPlot} depicts a good fit except for a slight overprediction for lower temperatures between 9 and 13 degrees. 
+
+```{r,eval=TRUE,echo=FALSE, tidy = F, fig.width=10, fig.height=5, fig.cap="\\label{fig:ImportancePlotMSE} Variable importance plot based on increase in MSE when premuted and tested using OOB sample, higher values indicate larger impact when premuted, hence larger importance."}
+#variable importance based on randomization - higher value mean more important
+#incMSE OOB
+varImpPlot(rf_temp, type = 1,main = "")
+```
+
+```{r,eval=TRUE,echo=FALSE, tidy = F, fig.width=10, fig.height=5, fig.cap="\\label{fig:ImportancePlotPure} Variable importance plot based on increase in node purity, higher values indicate larger importance."}
+#incNodePurity
+varImpPlot(rf_temp, type = 2,main = "")
+```
+
+
+Figure \ref{fig:ImportancePlotMSE} and \ref{fig:ImportancePlotPure} depicts that the variable importance plot based on the OOB sample tends to spread the importances more uniformly, but `water_temp` remains a main predictor for both. We observe that there are a lot of predictors considered to be relevant after `water_temp`, which indicates a well performance from the random forest model. This is reflected in the low test MSE.
+
+```{r,eval=TRUE,echo=FALSE}
+#MSE on test set for bagged tree
+cat("Test MSE of Random Forest Model\n",mean((yhat_rf-temp_plot)^2))
+```
