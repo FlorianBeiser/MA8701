@@ -10,63 +10,114 @@ output:
   
 
 ```{r rpackages,eval=TRUE,echo=FALSE, message=FALSE, warning=FALSE}
-#install.packages("tree")
-#install.packages("randomForest")
-#install.packages("data.table")
-
+library(lubridate)
 library(tree)
 library(randomForest)
 library(data.table)
 ```
 
-# Random Forest Model Fit 
+In this project, we analyse a real dataset using methods from part 2-4 of the MA8701 course.
+
+### Note on Open Science
+
+To pursue the idea of reproducible research, the chosen dataset as well as the code for our analysis are publicly accessible:
+
+* dataset: https://github.com/metno/havvarsel-data-driven-pred
+* code: https://github.com/FlorianBeiser/MA8701
+
+# The Data Set 
+
+For this project, we generated a data set ourselves by fetching real-world observations from the `Havvarsel-Forst` and `Frost` database servers of the Meteorological Institute of Norway (MET). To this end, we established a routine downloading from the respective API, which can be found in the aforementioned repository. Since the data was obviously not analyzed before in a similar way, the subsequent result will contribute to active research. 
+
+The constructed data set consists of multiple time series with measurement of different weather properties and a time series for the water temperature at Sjøstrand in Asker kommune during the summer month, which was originally collected through badevann.no in the summer month from 2016 til 2020. Sjøstrand is a popular swimming site south of Oslo. As index, our data set contains the times of measurement which are typically made at 4 full hours per day. Technically, the water temperatures are collected in the respective column
+
+- `water_temp` in `degC` measured at 7, 10, 14, 16 every day during swimming season.
+
+The goal of the data analysis is the predict the swimming tempertures at Sjøstrand beach using atmospheric weather values (no forecasted values) from surrounding weather observation stations. In the aforementioned data generation process via the `Frost` database of MET we retrieve values for 7 different atmospheric weather values where we identify the stations for those measurements respectively and include them in our dataset. Thereby, we follow the naming convention: "station_id" (identifyer of the station where the measurement is done) + "element" (atmoshperic quantity that got measured) + "number" (0=measurement in 2m height, 1=measurement in 10 height above ground). As elements we consider: 
+
+- `air_temperature` in $degC$
+- `wind_speed` in $m/s$
+- `cloud_area_fraction` in $0,...,8$ (0 no clouds, 8 fully cloudy)
+- `mean(solar irradiance)` in $W/m^2$ - a quantity for the intensity of the sun
+- `sum(duration of sunshine)` in $min$ - sunshine in the last hour
+- `mean(realtive humidity)` in $%$
+- `mean(downwelling shortwave flux)` in $W/m^2$ - a quantity for the intensity of the sun (similar to irradiance but only for highly intesive UV radiation)
+
+Therewith, we end up a data set with a time index, one `water_temp` measurement, and 16 atmospheric measurements, where we want to do prediction of the water temperature (what will be explained in a bit more detail in the subsequent sections).
+
+## Model Building and Preprocessing 
+
+Our goal is to predict the water temperature at the next time using all information from the previous time - this includes the `water_temp` at that previous time. Therefore, we introduce all atmospheric observations \emph{and} the water temperature at time $t$ as covariates and what to model the response, which is the water temperature at time $t+1$. 
 
 ```{r,eval=T,echo=F}
-#library(data.table)
+#############################
+## Data preprocessing
 
-#Data preprocessing
-temp_dat <- read.csv("dataset1.csv")
+# Loading data
+raw_data <- read.csv("dataset1.csv")
 
-#fetch water temp to create a shift in response 
-tmp_col<- temp_dat[,"water_temp"]
-tmp_shift <- shift(tmp_col,n=1)
-new_tmp <- cbind(temp_dat,tmp_shift)
-colnames(new_tmp)[19] <- "response"
+# Creating a response column by extracting, shifting and adding "water_temp"
+response_column <- shift(raw_data[,"water_temp"],n=1)
+data <- cbind(raw_data,response_column)
+colnames(data)[19] <- "response"
 
-#remove first row
-new_tmp <- new_tmp[-1,]
+#remove first row (no response)
+data <- data[-1,]
+
+#remove empty columns
+data <- data[,!(names(data) %in% c("SN19940wind_speed1","SN18700cloud_area_fraction1"))]
 
 #visualize data
-#plot(temp_dat$time,temp_dat$water_temp)
+season = as.POSIXct(data$time[year(data$time)==2016],format="%Y-%m-%d %H:%M:%S")
+year(season) = 0
 
-#year index up to 2019
-temp_dat_ind <- sample(1:1858)
+plot(season, 
+    data$water_temp[year(data$time)==2016],
+    main="water temperatures", type="l",
+    xlab="time", ylab="degC",
+    xlim=c(as.POSIXct("0000-05-01 00:00:00",format="%Y-%m-%d %H:%M:%S"),
+           as.POSIXct("0000-10-30 00:00:00",format="%Y-%m-%d %H:%M:%S")),
+    ylim=c(5,25))
+
+col_idx = 2
+for (y in 2017:2020){
+  season = as.POSIXct(data$time[year(data$time)==y],format="%Y-%m-%d %H:%M:%S")
+  year(season) = 0
+  lines(season, data$water_temp[year(data$time)==y], col=col_idx)
+  col_idx = col_idx + 1 
+}
+
+legend("topright", legend=c(2016,2017,2018,2019,2020),
+       col=c(1,2,3,4,5), lty=1)
+
+data <- data[,!(names(data) %in% c("SN19940wind_speed1","SN18700cloud_area_fraction1"))]
 
 #create train and test set
+train_indicies = c(1:length(data$time[year(data$time)<2020]))
 #2016-2019 train
-temp_train <- new_tmp[temp_dat_ind,]
+data_train <- data[train_indicies,]
 #2020 test
-temp_test <- new_tmp[-temp_dat_ind,]
+data_test <- data[-train_indicies,]
 
-#inspect data - no info? no problem with RF
-check <-temp_dat$SN19940wind_speed1
-#head(check)
-check2 <- temp_dat$SN18700cloud_area_fraction1
-#head(check2)
 ```
-As our data set is a time series, we include the water temperature the day before as a covariate. As a result, we know that this strong predictor `water_temp` will dominate the trees produced if we choose to use bagging. To obtain decorrelated trees and improve the variance reduction, we therefore want to fit a random forest model to our data set. 
+
+
+# Random Forest Model Fit 
+
+Since the water temperature changes rather slowly compared to the atmospheric quantities and we have the water temperature of the previous time included as covariate, we know that this strong predictor `water_temp` will dominate the trees produced if we choose to use bagging. To obtain decorrelated trees and improve the variance reduction, we therefore want to fit a random forest model to our data set. 
 
 We utilize the `randomForest` package in R. As the random forest allows a random selection of $m$ covariates $m \leq p$ to be considered for the split for each node, a 5-fold cross validation was applied to find the optimum number of covariates. As the data set contains 19 variables, the general rule for regression is to set the number of randomly chosen variables to be considered as $floor(\frac{19}{3}) = 6$. However, we obtain the smallest cross-validation error for $m=4$. This can be explained by our data set being very correlated, and it is therefore wise to set $m$ to be small. 
 
 ```{r,eval=TRUE,echo=FALSE}
 library(randomForest)
-#CV to find optimal mtry, takes a long time to run 
-#randomForest::rfcv(trainx = temp_train[,c(2:18)],trainy =temp_train[,"response"])
+#CV to find optimal mtry
+#WARNING! takes a long time to run 
+randomForest::rfcv(trainx = data_train[,!(names(data_train)=="response")],trainy = data_train[,"response"])$n.var
 
 #build a random forest with mtry = 4 
-rf_temp <- randomForest(response ~ .-time, data = new_tmp, subset = temp_dat_ind, mtry =4, importance= TRUE)
+rf_temp <- randomForest(response ~ .-time, data = data, subset = train_indicies, mtry =4, importance= TRUE)
 #to see fit summary uncomment next line
-#rf_temp
+rf_temp
 
 ```
 
@@ -78,8 +129,8 @@ As each tree uses a different bootstrap sample, the OOB sample is used as a vali
 
 ```{r,eval=TRUE,echo=FALSE,tidy = F, fig.width=10, fig.height=5, fig.cap="\\label{fig:RFTestPlot} Predicted test values against true values."}
 #test
-yhat_rf <- predict(rf_temp, newdata = temp_test)
-temp_plot <- temp_test[,"response"] 
+yhat_rf <- predict(rf_temp, newdata = data_test)
+temp_plot <- data_test[,"response"] 
 plot(yhat_rf, temp_plot, xlab = "Predicted Temperature", ylab = "True Temperature")
 abline(0,1)
 ```
