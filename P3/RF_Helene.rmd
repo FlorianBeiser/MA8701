@@ -96,7 +96,7 @@ print(head(data))
 
 We start the exploration by investigating the response. 
 
-```{r, eval=T, echo=F}
+```{r, eval=T, echo=F, fig.height=3.5}
 #visualize data
 season = as.POSIXct(data$time[year(data$time)==2016],format="%Y-%m-%d %H:%M:%S")
 year(season) = 0
@@ -124,7 +124,7 @@ legend("topright", legend=c(2016,2017,2018,2019,2020),
 The water temperature shows a very pronounced seasonality in its progression. Moreover, it changes only rather slow from one time to the next. 
 
 
-```{r, eval=T, echo=F}
+```{r, eval=T, echo=F, fig.height=4}
 par(mfrow=c(1,2))
 
 #visualize data
@@ -147,9 +147,6 @@ for (y in 2017:2020){
   col_idx = col_idx + 1 
 }
 
-legend("topright", legend=c(2016,2017,2018,2019,2020),
-       col=c(1,2,3,4,5), lty=1)
-
 
 #visualize data
 season = as.POSIXct(data$time[year(data$time)==2016],format="%Y-%m-%d %H:%M:%S")
@@ -170,9 +167,6 @@ for (y in 2017:2020){
   lines(season, data$"SN50539mean.solar_irradiance.PT1H.0" [year(data$time)==y], col=col_idx)
   col_idx = col_idx + 1 
 }
-
-legend("topright", legend=c(2016,2017,2018,2019,2020),
-       col=c(1,2,3,4,5), lty=1)
 
 ```
 In some of the covariates this seasonality is also present, but with an much higher volatility, and in some covariates we cannot recognize any significant seasonality at all and additionally they change much faster - as example we show the air temperature and the solar irradiance averaged over the last hour at their observation station which is closest to Sjøstrand. (The lonlat-coordinates of the relevant stations can be found in the `log1.txt` file in the code repository.)
