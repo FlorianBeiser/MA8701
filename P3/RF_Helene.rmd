@@ -43,11 +43,24 @@ The goal of the data analysis is the predict the swimming tempertures at Sjøstr
 - `mean(realtive humidity)` in $%$
 - `mean(downwelling shortwave flux)` in $W/m^2$ - a quantity for the intensity of the sun (similar to irradiance but only for highly intesive UV radiation)
 
-Therewith, we end up a data set with a time index, one `water_temp` measurement, and 16 atmospheric measurements, where we want to do prediction of the water temperature (what will be explained in a bit more detail in the subsequent sections).
+The data generation process can be repeated (or modified) by running the `run_example.sh` in the data generation repository - however, the dataset which we subsequently use is also provided stationary in the code repository.
 
-## Model Building and Preprocessing 
+Therewith, we end up a data set with a time index, one `water_temp` measurement, and 14 atmospheric measurements, where we want to do prediction of the water temperature (what will be explained in a bit more detail in the subsequent sections).
 
-Our goal is to predict the water temperature at the next time using all information from the previous time - this includes the `water_temp` at that previous time. Therefore, we introduce all atmospheric observations \emph{and} the water temperature at time $t$ as covariates and what to model the response, which is the water temperature at time $t+1$. 
+
+## Model Building
+
+Our goal is to predict the water temperature at the next time using all information from the previous time - this includes the `water_temp` at that previous time. Therefore, we introduce all atmospheric observations \emph{and} the water temperature at time $t$ as covariates in order to model the response, which is the water temperature at time $t+1$. (Note that we explicitly assume here that we do not use forecasted values for the atmospheric variables even if that would be a valid data source in further research projects.)
+
+In a nutshell, the dataset consists of 15 covariates and 2327 observations. 
+
+
+## Preprocessing 
+
+Even if atmospheric measurements may exists for more times than the water temperature, we restrict ourselves to those time points when water tempeature measurements exists. However, it happens that the measurement equipment is out of order for a short period of time (it happens but it happens only very seldomly and then typically one day of atmospheric observations at a station are missing). This data is missing completely at random and within the data generation process it is imputed from its nearest neighbor. Even though this method is commonly not recommended we argue that the weather does not completely change within a few hours and this guess is better than mean imputation (maybe in Norway the weather changes quicker than in other parts of the world, but only very very few atmospheric measurements are missing such that we do not expect any influence on the data analysis.)
+
+The data covers 5 years such that we use the years 2016-2019 (about 80% of the data) as training set in the data analysis and we set the last year (2020, corresponding to about 20% of the data) apart as test data to validate the results.
+
 
 ```{r,eval=T,echo=F}
 #############################
@@ -67,6 +80,23 @@ data <- data[-1,]
 #remove empty columns
 data <- data[,!(names(data) %in% c("SN19940wind_speed1","SN18700cloud_area_fraction1"))]
 
+#create train and test set
+# @HMO: Why was data resampled??
+train_indicies = c(1:length(data$time[year(data$time)<2020]))
+#2016-2019 train
+data_train <- data[train_indicies,]
+#2020 test
+data_test <- data[-train_indicies,]
+
+print(head(data))
+
+```
+
+## Data Exploration
+
+We start the exploration by investigating the response. 
+
+```{r, eval=T, echo=F}
 #visualize data
 season = as.POSIXct(data$time[year(data$time)==2016],format="%Y-%m-%d %H:%M:%S")
 year(season) = 0
@@ -89,17 +119,67 @@ for (y in 2017:2020){
 
 legend("topright", legend=c(2016,2017,2018,2019,2020),
        col=c(1,2,3,4,5), lty=1)
+```
 
-data <- data[,!(names(data) %in% c("SN19940wind_speed1","SN18700cloud_area_fraction1"))]
+The water temperature shows a very pronounced seasonality in its progression. Moreover, it changes only rather slow from one time to the next. 
 
-#create train and test set
-train_indicies = c(1:length(data$time[year(data$time)<2020]))
-#2016-2019 train
-data_train <- data[train_indicies,]
-#2020 test
-data_test <- data[-train_indicies,]
+
+```{r, eval=T, echo=F}
+par(mfrow=c(1,2))
+
+#visualize data
+season = as.POSIXct(data$time[year(data$time)==2016],format="%Y-%m-%d %H:%M:%S")
+year(season) = 0
+
+plot(season, 
+    data$"SN19710air_temperature0" [year(data$time)==2016],
+    main="air temperatures (SN19710)", type="l",
+    xlab="time", ylab="degC",
+    xlim=c(as.POSIXct("0000-05-01 00:00:00",format="%Y-%m-%d %H:%M:%S"),
+           as.POSIXct("0000-10-30 00:00:00",format="%Y-%m-%d %H:%M:%S")),
+    ylim=c(0,35))
+
+col_idx = 2
+for (y in 2017:2020){
+  season = as.POSIXct(data$time[year(data$time)==y],format="%Y-%m-%d %H:%M:%S")
+  year(season) = 0
+  lines(season, data$"SN19710air_temperature0" [year(data$time)==y], col=col_idx)
+  col_idx = col_idx + 1 
+}
+
+legend("topright", legend=c(2016,2017,2018,2019,2020),
+       col=c(1,2,3,4,5), lty=1)
+
+
+#visualize data
+season = as.POSIXct(data$time[year(data$time)==2016],format="%Y-%m-%d %H:%M:%S")
+year(season) = 0
+
+plot(season, 
+    data$"SN50539mean.solar_irradiance.PT1H.0" [year(data$time)==2016],
+    main="mean solar irradience (SN50539)", type="l",
+    xlab="time", ylab="W/m2",
+    xlim=c(as.POSIXct("0000-05-01 00:00:00",format="%Y-%m-%d %H:%M:%S"),
+           as.POSIXct("0000-10-30 00:00:00",format="%Y-%m-%d %H:%M:%S")),
+    ylim=c(0,1000))
+
+col_idx = 2
+for (y in 2017:2020){
+  season = as.POSIXct(data$time[year(data$time)==y],format="%Y-%m-%d %H:%M:%S")
+  year(season) = 0
+  lines(season, data$"SN50539mean.solar_irradiance.PT1H.0" [year(data$time)==y], col=col_idx)
+  col_idx = col_idx + 1 
+}
+
+legend("topright", legend=c(2016,2017,2018,2019,2020),
+       col=c(1,2,3,4,5), lty=1)
 
 ```
+In some of the covariates this seasonality is also present, but with an much higher volatility, and in some covariates we cannot recognize any significant seasonality at all and additionally they change much faster - as example we show the air temperature and the solar irradiance averaged over the last hour at their observation station which is closest to Sjøstrand. (The lonlat-coordinates of the relevant stations can be found in the `log1.txt` file in the code repository.)
+
+Further the seaborn pairplot (see python part of this project) shows sometimes clear linear correlation between the covariates and the response, but also between the covariates themselves, which is "dangerous" as we have seen in Kjerstis lectures. However, also very unclear relations between the response and the covariates are visible.
+
+This yields that non-linear data analysis methods are needed for the dataset at hand.
 
 
 # Random Forest Model Fit 
