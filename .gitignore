@@ -52,3 +52,7 @@ vignettes/*.pdf
 # Yaolins local files
 run.sh
 .DS_Store
+
+# Files from jupyter notebooks
+*/.ipynb_checkpoints
+*/.idea
