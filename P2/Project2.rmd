@@ -204,6 +204,15 @@ As each tree uses a different bootstrap sample, the OOB sample is used as a vali
 #test
 yhat_rf <- predict(rf_temp, newdata = data_test)
 temp_plot <- data_test[,"response"] 
+
+par(mfrow=c(1,2))
+plot(as.POSIXct(data_test[,"time"],format="%Y-%m-%d %H:%M:%S"),data_test[,"response"], 
+     xlab="time", ylab="degC", pch=20, col="orange")
+points(as.POSIXct(data_test[,"time"],format="%Y-%m-%d %H:%M:%S"),yhat_rf, 
+      col="blue", pch=20)
+legend("bottomright", legend=c("prediciton","true"),
+       col=c("blue","orange"), lty=1)
+
 plot(yhat_rf, temp_plot, xlab = "Predicted Temperature", ylab = "True Temperature")
 abline(0,1)
 ```
