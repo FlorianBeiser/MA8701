@@ -81,7 +81,6 @@ data <- data[-1,]
 data <- data[,!(names(data) %in% c("SN19940wind_speed1","SN18700cloud_area_fraction1"))]
 
 #create train and test set
-# @HMO: Why was data resampled??
 train_indicies = c(1:length(data$time[year(data$time)<2020]))
 #2016-2019 train
 data_train <- data[train_indicies,]
