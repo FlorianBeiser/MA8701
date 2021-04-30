@@ -170,6 +170,10 @@ for (y in 2017:2020){
 ```
 In some of the covariates this seasonality is also present, but with an much higher volatility, and in some covariates we cannot recognize any significant seasonality at all and additionally they change much faster - as example we show the air temperature and the solar irradiance averaged over the last hour at their observation station which is closest to Sjøstrand. (The lonlat-coordinates of the relevant stations can be found in the `log1.txt` file in the code repository.)
 
+```{r, eval=T, echo=F, out.width="90%"}
+knitr::include_graphics("seaborn.png")
+```
+
 Further the seaborn pairplot (see python part of this project) shows sometimes clear linear correlation between the covariates and the response, but also between the covariates themselves, which is "dangerous" as we have seen in Kjerstis lectures. However, also very unclear relations between the response and the covariates are visible.
 
 This yields that non-linear data analysis methods are needed for the dataset at hand.
@@ -237,3 +241,44 @@ Figure \ref{fig:ImportancePlotMSE} and \ref{fig:ImportancePlotPure} depicts that
 #MSE on test set for bagged tree
 cat("Test MSE of Random Forest Model\n",mean((yhat_rf-temp_plot)^2))
 ```
+
+ 
+ 
+ 
+  
+ 
+  
+
+ 
+# Neural Nets
+
+The code can be found in `Project3.ipynb`.
+
+Due to complexity restrictions, only one neural network is going to be trained and tested here.
+
+## Training
+
+```{r, eval=T, echo=F, fig.align='center', out.width="50%"}
+knitr::include_graphics("training.png")
+```
+
+The training history plot yields that the training is pretty fast to converge - the loss is minimized quickly. This is one the of the benefit for using the simple model. `Loss` represents the loss during the training while `val_loss` represents the loss for the validation set during the training. 
+
+## Prediction 
+
+We evaluate the performance of the trained neural net on the test set which are the observations from the last year.
+
+```{r, eval=T, echo=F, fig.align='center', out.width="55%"}
+par(mfrow=c(1,2))
+knitr::include_graphics("test_time.png")
+knitr::include_graphics("test_temps.png")
+```
+
+The MSE for the prediction sets is  0.6135239601135254
+
+The trained neural net shows a good performance on the test set. The prediction seems to be unbiased and with low variance.
+
+
+# Conclusion
+
+We have fetched a dataset from different sources, which contains the water temperature at a popular swimming site in Asker and collected atmospheric measurements from the MET weather observation stations around. The goal of our project work was to do prediction for the water temperature of the next future time using all information of the current time. The data exploration suggests the need for non-linear data analysis method, wherefore we have fit a random forest model and a neural net. Both approaches show a grandious prediction quality. The random forest is a bit biased for low temperatures, but in contrast to the neural net it allows us to identify the most significant variables, which coincide qualitatively to a large extend with our intuition. 
