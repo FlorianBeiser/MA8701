@@ -50,7 +50,7 @@ Therewith, we end up a data set with a time index, one `water_temp` measurement,
 
 ## Model Building
 
-Our goal is to predict the water temperature at the next time using all information from the previous time - this includes the `water_temp` at that previous time. Therefore, we introduce all atmospheric observations \emph{and} the water temperature at time $t$ as covariates in order to model the response, which is the water temperature at time $t+1$. (Note that we explicitly assume here that we do not use forecasted values for the atmospheric variables even if that would be a valid data source in further research projects.)
+Our goal is to predict the water temperature at the next time using all information from the previous time - this includes the `water_temp` at that previous time. Therefore, we introduce all atmospheric observations \emph{and} the water temperature at time $t$ as covariates in order to model the response, which is the water temperature at time $t+1$. (Note that we explicitly assume here that we do not use forecasted values for the atmospheric variables even if that would be a valid data source in further research projects. Moreover, we ignore that the time difference between the measurements is bigger during the night than during the day.)
 
 In a nutshell, the dataset consists of 15 covariates and 2327 observations. 
 
@@ -208,7 +208,7 @@ plot(yhat_rf, temp_plot, xlab = "Predicted Temperature", ylab = "True Temperatur
 abline(0,1)
 ```
 
-Figure \ref{fig:RFTestPlot} depicts a good fit except for a slight overprediction for lower temperatures between 9 and 13 degrees. 
+Figure \ref{fig:RFTestPlot} depicts a good fit except for a slight overprediction for lower temperatures between 9 and 13 degrees. This may corresponds to the fact that in this low-temperature region less observations are available.
 
 ```{r,eval=TRUE,echo=FALSE, tidy = F, fig.width=10, fig.height=5, fig.cap="\\label{fig:ImportancePlotMSE} Variable importance plot based on increase in MSE when premuted and tested using OOB sample, higher values indicate larger impact when premuted, hence larger importance."}
 #variable importance based on randomization - higher value mean more important
