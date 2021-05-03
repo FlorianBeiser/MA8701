@@ -23,17 +23,19 @@ In this project, we analyse a real dataset using methods from part 2-4 of the MA
 To pursue the idea of reproducible research, the chosen dataset as well as the code for our analysis are publicly accessible:
 
 * dataset: https://github.com/metno/havvarsel-data-driven-pred
-* code: https://github.com/FlorianBeiser/MA8701
+* code: https://github.com/FlorianBeiserNTNU/MA8701
 
 # The Data Set 
 
-For this project, we generated a data set ourselves by fetching real-world observations from the `Havvarsel-Forst` and `Frost` database servers of the Meteorological Institute of Norway (MET). To this end, we established a routine downloading from the respective API, which can be found in the aforementioned repository. Since the data was obviously not analyzed before in a similar way, the subsequent result will contribute to active research. 
+For this project, we generated a data set ourselves by fetching real-world weather observations from the `Havvarsel-Forst` and `Frost` database servers of the Meteorological Institute of Norway (MET). To this end, we established a routine downloading from the respective APIs, which can be found in the aforementioned repository. Since the data was obviously not analyzed before in a similar way, the subsequent result will contribute to active research. 
 
-The constructed data set consists of multiple time series with measurement of different weather properties and a time series for the water temperature at Sjøstrand in Asker kommune during the summer month, which was originally collected through badevann.no in the summer month from 2016 til 2020. Sjøstrand is a popular swimming site south of Oslo. As index, our data set contains the times of measurement which are typically made at 4 full hours per day. Technically, the water temperatures are collected in the respective column
+The constructed data set consists of multiple time series with measurement of different weather properties and a time series for the water temperature at \emph{Sjøstrand} in Asker kommune during the summer months, which was originally collected through "badevann.no" from 2016 til 2020. Sjøstrand is a popular swimming site south of Oslo, hence, the study of its water temperature is interesting for the general public and recreation industry. 
+
+As index, our data set contains the times of measurement which are typically made at 4 full hours per day. Technically, the water temperatures are collected in the respective column
 
 - `water_temp` in `degC` measured at 7, 10, 14, 16 every day during swimming season.
 
-The goal of the data analysis is the predict the swimming tempertures at Sjøstrand beach using atmospheric weather values (no forecasted values) from surrounding weather observation stations. In the aforementioned data generation process via the `Frost` database of MET we retrieve values for 7 different atmospheric weather values where we identify the stations for those measurements respectively and include them in our dataset. Thereby, we follow the naming convention: "station_id" (identifyer of the station where the measurement is done) + "element" (atmoshperic quantity that got measured) + "number" (0=measurement in 2m height, 1=measurement in 10 height above ground). As elements we consider: 
+The goal of the data analysis is to predict the swimming tempertures at Sjøstrand beach using atmospheric weather values (no forecasted values) from surrounding weather observation stations. In the aforementioned data generation process via the `Frost` database of MET we retrieve values for 7 different atmospheric weather values where we identify the closest stations for those measurements respectively and include them in our dataset. Thereby, we follow the naming convention: "station_id" (identifyer of the station where the measurement is done) + "element" (atmoshperic quantity that got measured) + "number" (0=measurement in 2m height, 1=measurement in 10 height above ground). The lonlat-coordinates of the relevant stations can be found in the `log1.txt` file in the repositories. As elements we consider: 
 
 - `air_temperature` in $degC$
 - `wind_speed` in $m/s$
@@ -45,19 +47,19 @@ The goal of the data analysis is the predict the swimming tempertures at Sjøstr
 
 The data generation process can be repeated (or modified) by running the `run_example.sh` in the data generation repository - however, the dataset which we subsequently use is also provided stationary in the code repository.
 
-Therewith, we end up a data set with a time index, one `water_temp` measurement, and 14 atmospheric measurements, where we want to do prediction of the water temperature (what will be explained in a bit more detail in the subsequent sections).
+Therewith, we end up a data set with a time index, one `water_temp` measurement, and 14 atmospheric measurements.
 
 
 ## Model Building
 
-Our goal is to predict the water temperature at the next time using all information from the previous time - this includes the `water_temp` at that previous time. Therefore, we introduce all atmospheric observations \emph{and} the water temperature at time $t$ as covariates in order to model the response, which is the water temperature at time $t+1$. (Note that we explicitly assume here that we do not use forecasted values for the atmospheric variables even if that would be a valid data source in further research projects. Moreover, we ignore that the time difference between the measurements is bigger during the night than during the day.)
+Our goal is to predict the water temperature at the next time using all information from the current time - this includes the `water_temp` at that current time. Therefore, we introduce all atmospheric observations \emph{and} the water temperature at time $t$ as covariates in order to model the response, which is the water temperature at time $t+1$. (Note that we explicitly assume here that we do not use forecasted values for the atmospheric variables even if that would be a valid data source in further research projects. Moreover, we ignore that the time difference between the measurements is bigger during the night than during the day to keep the model simpler.)
 
-In a nutshell, the dataset consists of 15 covariates and 2327 observations. 
+In a nutshell, the dataset consists of 1 response, 15 covariates and 2327 observations. 
 
 
 ## Preprocessing 
 
-Even if atmospheric measurements may exists for more times than the water temperature, we restrict ourselves to those time points when water tempeature measurements exists. However, it happens that the measurement equipment is out of order for a short period of time (it happens but it happens only very seldomly and then typically one day of atmospheric observations at a station are missing). This data is missing completely at random and within the data generation process it is imputed from its nearest neighbor. Even though this method is commonly not recommended we argue that the weather does not completely change within a few hours and this guess is better than mean imputation (maybe in Norway the weather changes quicker than in other parts of the world, but only very very few atmospheric measurements are missing such that we do not expect any influence on the data analysis.)
+Even if atmospheric measurements may exists for more times than the water temperature, we restrict ourselves to those time points when water temperature measurements exists. However, it happens that the measurement equipment is out of order for a short period of time (it happens but it happens only very seldomly and then typically one day of atmospheric observations at a station is missing). This data is \emph{missing completely at random} and within the data generation process it is imputed from its nearest neighbor. Even though this method is commonly not recommended we argue that the weather does not completely change within a few hours and this guess is better than mean imputation (maybe in Norway the weather changes quicker than in other parts of the world, but only very very few atmospheric measurements are missing such that we do not expect any influence on the data analysis.)
 
 The data covers 5 years such that we use the years 2016-2019 (about 80% of the data) as training set in the data analysis and we set the last year (2020, corresponding to about 20% of the data) apart as test data to validate the results.
 
@@ -168,9 +170,9 @@ for (y in 2017:2020){
 }
 
 ```
-In some of the covariates this seasonality is also present, but with an much higher volatility, and in some covariates we cannot recognize any significant seasonality at all and additionally they change much faster - as example we show the air temperature and the solar irradiance averaged over the last hour at their observation station which is closest to Sjøstrand. (The lonlat-coordinates of the relevant stations can be found in the `log1.txt` file in the code repository.)
+In some of the covariates this seasonality is also present, but with an much higher volatility, and in some covariates we cannot recognize any significant seasonality at all and additionally they change much faster - as example we show the air temperature and the solar irradiance averaged over the last hour at their observation station which is closest to Sjøstrand. 
 
-```{r, eval=T, echo=F, out.width="90%"}
+```{r, eval=T, echo=F, fig.align="center", out.width="90%"}
 knitr::include_graphics("seaborn.png")
 ```
 
@@ -178,7 +180,7 @@ Further the seaborn pairplot (see python part of this project) shows sometimes c
 
 This yields that non-linear data analysis methods are needed for the dataset at hand.
 
-
+\newpage
 # Random Forest Model Fit 
 
 Since the water temperature changes rather slowly compared to the atmospheric quantities and we have the water temperature of the previous time included as covariate, we know that this strong predictor `water_temp` will dominate the trees produced if we choose to use bagging. To obtain decorrelated trees and improve the variance reduction, we therefore want to fit a random forest model to our data set. 
@@ -211,11 +213,11 @@ temp_plot <- data_test[,"response"]
 
 par(mfrow=c(1,2))
 plot(as.POSIXct(data_test[,"time"],format="%Y-%m-%d %H:%M:%S"),data_test[,"response"], 
-     xlab="time", ylab="degC", pch=20, col="orange")
+     xlab="time", ylab="degC", pch=20, col="blue")
 points(as.POSIXct(data_test[,"time"],format="%Y-%m-%d %H:%M:%S"),yhat_rf, 
-      col="blue", pch=20)
+      col="orange", pch=20)
 legend("bottomright", legend=c("prediciton","true"),
-       col=c("blue","orange"), lty=1)
+       col=c("orange","blue"), lty=1)
 
 plot(yhat_rf, temp_plot, xlab = "Predicted Temperature", ylab = "True Temperature")
 abline(0,1)
@@ -242,14 +244,8 @@ Figure \ref{fig:ImportancePlotMSE} and \ref{fig:ImportancePlotPure} depicts that
 cat("Test MSE of Random Forest Model\n",mean((yhat_rf-temp_plot)^2))
 ```
 
- 
- 
- 
-  
- 
-  
 
- 
+\newpage
 # Neural Nets
 
 The code can be found in `Project3.ipynb`.
@@ -274,9 +270,9 @@ knitr::include_graphics("test_time.png")
 knitr::include_graphics("test_temps.png")
 ```
 
-The MSE for the prediction sets is  0.6135239601135254
+The MSE for the prediction sets is  0.61352, meaning that the prediction deviates in average by half a degree, what will be barely feelable for the swimmer.
 
-The trained neural net shows a good performance on the test set. The prediction seems to be unbiased and with low variance.
+The trained neural net shows a good performance on the test set. The prediction seems with low variance and no clear bias. In particular, the neural nets extrapolates better for low temperature prediction, which only arise in the test but not in the training set. 
 
 
 # Conclusion
